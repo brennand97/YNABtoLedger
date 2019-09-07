@@ -1,0 +1,17 @@
+{
+  "name": "ynabtoledger",
+  "version": "1.0.0",
+  "description": "Syncs from YNAB to a ledger filesystem",
+  "main": "index.mjs",
+  "dependencies": {
+    "dotenv": "^8.1.0",
+    "ynab": "^1.16.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "start": "node --experimental-modules index.mjs",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Brennan Douglas",
+  "license": "ISC"
+}
