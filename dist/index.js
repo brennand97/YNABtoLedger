@@ -21,19 +21,41 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
-//require('dotenv').config();
 const ynab = __importStar(require("ynab"));
-//const ynab = require("ynab");
+const Entry_1 = require("./Entry");
+const utils_1 = require("./utils");
 const access_token = process.env.YNAB_ACCESS_TOKEN;
-console.log(ynab.API);
 const api = new ynab.API(access_token);
 (function () {
     return __awaiter(this, void 0, void 0, function* () {
         const budgetResponse = yield api.budgets.getBudgets();
-        const budgets = budgetResponse.data.budgets;
-        for (let budget of budgets) {
-            console.log(`Budget Name: ${budget.name}`);
-        }
+        const budget = budgetResponse.data.budgets[1];
+        console.log(`Budget Name: ${budget.name}`);
+        const accountResponse = yield api.accounts.getAccounts(budget.id);
+        const accounts = accountResponse.data.accounts.map(a => normalizeName(a));
+        const categoryResponse = yield api.categories.getCategories(budget.id);
+        const categoryGroups = categoryResponse.data.category_groups.map(cg => normalizeName(cg));
+        const categories = categoryGroups.map(e => e.categories).reduce((a, b) => a.concat(b), []).map(c => normalizeName(c));
+        const transactionResponse = yield api.transactions.getTransactions(budget.id);
+        const transactions = transactionResponse.data.transactions.map(t => normalizeName(t, ['account_name', 'category_name']));
+        const entryBuilder = new Entry_1.EntryBuilder((id) => utils_1.findbyId(transactions, id), (id) => utils_1.findbyId(accounts, id), (id) => utils_1.findbyId(categories, id), (id) => utils_1.findbyId(categoryGroups, id));
+        const entries = transactions.map(t => entryBuilder.buildEntry(t));
     });
 })();
+function normalizeName(object, keys = ['name']) {
+    return object;
+    for (let key of keys) {
+        if (key in object && object[key]) {
+            const words = object[key].split(' ');
+            const name = words.map((w) => {
+                w = w.replace(/([\-_])/g, x => '');
+                if (w.match(/[a-z]/i)) {
+                    return w.replace(/(\b[a-z\-_](?!\s))/gi, x => x.toLocaleUpperCase());
+                }
+            }).join('');
+            object[key] = name;
+        }
+    }
+    return object;
+}
 //# sourceMappingURL=index.js.map
