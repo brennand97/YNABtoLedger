@@ -5,6 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "@types/node": "^12.7.4",
+    "columnify": "^1.5.4",
     "dotenv": "^8.1.0",
     "ynab": "^1.16.0"
   },

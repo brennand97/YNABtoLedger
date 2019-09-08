@@ -1,6 +1,8 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
+import columnify from 'columnify';
+
 import * as ynab from 'ynab';
 import { normalize } from 'path';
 import { TransactionsResponse, CategoriesResponse, AccountsResponse } from 'ynab';
@@ -15,8 +17,6 @@ const api = new ynab.API(access_token);
 
     const budgetResponse = await api.budgets.getBudgets();
     const budget = budgetResponse.data.budgets[1];
-
-    console.log(`Budget Name: ${budget.name}`);
 
     const accountResponse : AccountsResponse = await api.accounts.getAccounts(budget.id);
     const accounts = accountResponse.data.accounts.map(a => normalizeName(a));
@@ -36,6 +36,33 @@ const api = new ynab.API(access_token);
     );
 
     const entries: Array<Entry> = transactions.map(t => entryBuilder.buildEntry(t));
+    const uniqueEntries: Array<Entry> = Array.from(new Set(entries.map(e => e.id))).map(id => entries.find(e => e.id === id));
+
+    const output = []
+    for (let entry of uniqueEntries) {
+        output.push({
+            header: `${entry.recordDate} ${entry.cleared ? '*' : '!'} ${entry.payee}${entry.memo ? ` ; ${entry.memo}` : ''}`,
+            rows: entry.splits.map(split => {
+                return [`(${split.group}:${split.account})`, `\$${split.amount}`];
+            })
+        });
+    }
+
+    const maxRowWidth = output.reduce((a, e) => a.concat(e.rows.reduce((b, r) => b.concat(r), [])), []).reduce((max, r) => max > r.length ? max : r.length, 0);
+
+    const columnSpacing = 4;
+    const splitPadding = 4;
+    for (let row of output) {
+        console.log(row.header);
+        for (let sub_row of row.rows) {
+            let str = ' '.repeat(splitPadding);
+            str += sub_row[0];
+            str += ' '.repeat(maxRowWidth - sub_row[0].length + columnSpacing);
+            str += sub_row[1];
+            console.log(str);
+        }
+        console.log('');
+    }
 
 })();
 

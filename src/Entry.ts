@@ -1,5 +1,5 @@
 import { TransactionDetail, Account, Category, CategoryGroupWithCategories, SubTransaction, utils } from 'ynab';
-import { arraysEqual } from './utils';
+import { arraysEqual, hashCode } from './utils';
 
 export enum SplitGroup {
     Asset = "Assets",
@@ -16,6 +16,7 @@ export interface Split {
 }
 
 export interface Entry {
+    id: number;
     recordDate: string;
     payee: string;
     memo: string;
@@ -76,6 +77,7 @@ export class EntryBuilder {
 
     private buildDefaultEntry(transaction: TransactionDetail): Entry {
         return {
+            id: hashCode(transaction.id),
             recordDate: transaction.date,
             payee: transaction.payee_name,
             memo: transaction.memo,
@@ -90,6 +92,7 @@ export class EntryBuilder {
         const transfer_account = this.accountLookup(transaction.transfer_account_id);
         return {
             ...this.buildDefaultEntry(transaction),
+            id: hashCode([transaction.id, transfer_transaction.id].sort().join('')),
             payee: "Transfer",
             splits: [
                 {
@@ -170,6 +173,10 @@ export class EntryBuilder {
         };
     }
 
+    private isCleared(cleared: TransactionDetail.ClearedEnum): boolean {
+        return cleared !== TransactionDetail.ClearedEnum.Uncleared;
+    }
+
     private getCategoryGroup(category: Category): CategoryGroupWithCategories {
         if (category.hidden) {
             const originalGroup = this.categoryGroupLookup(category.original_category_group_id);
@@ -178,10 +185,6 @@ export class EntryBuilder {
             }
         }
         return this.categoryGroupLookup(category.category_group_id);
-    }
-
-    private isCleared(cleared: TransactionDetail.ClearedEnum): boolean {
-        return cleared !== TransactionDetail.ClearedEnum.Uncleared;
     }
 
     private getAccountSplitGroup(account: Account): SplitGroup {
@@ -193,6 +196,20 @@ export class EntryBuilder {
                 return SplitGroup.Liability;
             default:
                 return SplitGroup.Asset;
+        }
+    }
+
+    private getCategorySplitGroup(transaction: TransactionDetail, category: Category): SplitGroup {
+        switch (category.name) {
+            case "Inflows":
+                if (transaction.payee_name === "Starting Balance") {
+                    return SplitGroup.Equity;
+                }
+                else {
+                    return SplitGroup.Income;
+                }
+            default:
+                return SplitGroup.Expense;
         }
     }
 
@@ -223,20 +240,6 @@ export class EntryBuilder {
         }
     }
 
-    private getCategorySplitGroup(transaction: TransactionDetail, category: Category): SplitGroup {
-        switch (category.name) {
-            case "Inflows":
-                if (transaction.payee_name === "Starting Balance") {
-                    return SplitGroup.Equity;
-                }
-                else {
-                    return SplitGroup.Income;
-                }
-            default:
-                return SplitGroup.Expense;
-        }
-    }
-
     private getSplitAccountName(
         transaction: TransactionDetail, 
         category: Category, 
@@ -254,6 +257,7 @@ export class EntryBuilder {
 
     private getAccountAmount(transaction: TransactionDetail, account: Account): number {
         const amount = utils.convertMilliUnitsToCurrencyAmount(transaction.amount);
+        return amount;
         switch (this.getAccountSplitGroup(account)) {
             case SplitGroup.Liability:
                 return -amount;

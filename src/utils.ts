@@ -18,3 +18,11 @@ export function arraysEqual<T>(a: Array<T>, b: Array<T>) {
 export function findbyId(list, id) {
     return list.find(e => e.id ? e.id === id : false);
 }
+
+export function hashCode(s) {
+    var h = 0, l = s.length, i = 0;
+    if ( l > 0 )
+      while (i < l)
+        h = (h << 5) - h + s.charCodeAt(i++) | 0;
+    return h;
+};
