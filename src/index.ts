@@ -13,9 +13,7 @@ import { strict } from 'assert';
 const access_token = process.env.YNAB_ACCESS_TOKEN;
 const api = new ynab.API(access_token);
 
-
 function normalizeName<T>(object: T, keys: Array<string> = ['name']) : T {
-    return object;
     for(let key of keys) {
         if (key in object && object[key]) {
             const words: Array<string> = object[key].split(' ');
