@@ -256,14 +256,7 @@ export class EntryBuilder {
     }
 
     private getAccountAmount(transaction: TransactionDetail, account: Account): number {
-        const amount = utils.convertMilliUnitsToCurrencyAmount(transaction.amount);
-        return amount;
-        switch (this.getAccountSplitGroup(account)) {
-            case SplitGroup.Liability:
-                return -amount;
-            default:
-                return amount;
-        }
+        return utils.convertMilliUnitsToCurrencyAmount(transaction.amount);
     }
     
 }

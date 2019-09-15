@@ -35,14 +35,14 @@ export default async function() {
     const budget = budgetResponse.data.budgets[1];
 
     const accountResponse : AccountsResponse = await api.accounts.getAccounts(budget.id);
-    const accounts = accountResponse.data.accounts.map(a => normalizeName(a));
+    const accounts = accountResponse.data.accounts;
 
     const categoryResponse : CategoriesResponse = await api.categories.getCategories(budget.id);
-    const categoryGroups = categoryResponse.data.category_groups.map(cg => normalizeName(cg));
-    const categories = categoryGroups.map(e => e.categories).reduce((a, b) => a.concat(b), []).map(c => normalizeName(c));
+    const categoryGroups = categoryResponse.data.category_groups;
+    const categories = categoryGroups.map(e => e.categories).reduce((a, b) => a.concat(b), []);
 
     const transactionResponse : TransactionsResponse = await api.transactions.getTransactions(budget.id);
-    const transactions = transactionResponse.data.transactions.map(t => normalizeName(t, ['account_name', 'category_name']));
+    const transactions = transactionResponse.data.transactions;
 
     const entryBuilder: EntryBuilder = new EntryBuilder(
         (id: string) => findbyId(transactions, id),
