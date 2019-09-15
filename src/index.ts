@@ -13,7 +13,25 @@ import { strict } from 'assert';
 const access_token = process.env.YNAB_ACCESS_TOKEN;
 const api = new ynab.API(access_token);
 
-(async function() {
+
+function normalizeName<T>(object: T, keys: Array<string> = ['name']) : T {
+    return object;
+    for(let key of keys) {
+        if (key in object && object[key]) {
+            const words: Array<string> = object[key].split(' ');
+            const name = words.map((w: string) => {
+                w = w.replace(/([\-_])/g, x => '');
+                if (w.match(/[a-z]/i)) {
+                    return w.replace(/(\b[a-z\-_](?!\s))/gi, x => x.toLocaleUpperCase());
+                }
+            }).join('');
+            object[key] = name;
+        }
+    }
+    return object;
+}
+
+export default async function() {
 
     const budgetResponse = await api.budgets.getBudgets();
     const budget = budgetResponse.data.budgets[1];
@@ -64,22 +82,5 @@ const api = new ynab.API(access_token);
         console.log('');
     }
 
-})();
-
-function normalizeName<T>(object: T, keys: Array<string> = ['name']) : T {
-    return object;
-    for(let key of keys) {
-        if (key in object && object[key]) {
-            const words: Array<string> = object[key].split(' ');
-            const name = words.map((w: string) => {
-                w = w.replace(/([\-_])/g, x => '');
-                if (w.match(/[a-z]/i)) {
-                    return w.replace(/(\b[a-z\-_](?!\s))/gi, x => x.toLocaleUpperCase());
-                }
-            }).join('');
-            object[key] = name;
-        }
-    }
-    return object;
-}
+};
 

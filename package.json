@@ -17,6 +17,9 @@
     "start": "tsc && node dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "bin": {
+    "ynab-to-ledger": "./dist/cli.js"
+  },
   "author": "Brennan Douglas",
   "license": "ISC"
 }
