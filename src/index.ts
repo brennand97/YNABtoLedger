@@ -1,36 +1,8 @@
-import dotenv from 'dotenv';
-dotenv.config();
-
-import columnify from 'columnify';
-
-import * as ynab from 'ynab';
-import { normalize } from 'path';
-import { TransactionsResponse, CategoriesResponse, AccountsResponse } from 'ynab';
-import { EntryBuilder, Entry, Split } from './Entry';
+import { TransactionsResponse, CategoriesResponse, AccountsResponse, API } from 'ynab';
+import { EntryBuilder, Entry } from './Entry';
 import { findbyId } from './utils';
-import { strict } from 'assert';
 
-const access_token = process.env.YNAB_ACCESS_TOKEN;
-const api = new ynab.API(access_token);
-
-function normalizeName<T>(object: T, keys: Array<string> = ['name']) : T {
-    for(let key of keys) {
-        if (key in object && object[key]) {
-            const words: Array<string> = object[key].split(' ');
-            const name = words.map((w: string) => {
-                w = w.replace(/([\-_])/g, x => '');
-                if (w.match(/[a-z]/i)) {
-                    return w.replace(/(\b[a-z\-_](?!\s))/gi, x => x.toLocaleUpperCase());
-                }
-            }).join('');
-            object[key] = name;
-        }
-    }
-    return object;
-}
-
-export default async function() {
-
+async function getEntries(api: API) : Promise<Array<Entry>> {
     const budgetResponse = await api.budgets.getBudgets();
     const budget = budgetResponse.data.budgets[1];
 
@@ -53,6 +25,13 @@ export default async function() {
 
     const entries: Array<Entry> = transactions.map(t => entryBuilder.buildEntry(t));
     const uniqueEntries: Array<Entry> = Array.from(new Set(entries.map(e => e.id))).map(id => entries.find(e => e.id === id));
+
+    return uniqueEntries;
+}
+
+export default async function(api: API) {
+
+    const uniqueEntries: Array<Entry> = await getEntries(api);
 
     const output = []
     for (let entry of uniqueEntries) {

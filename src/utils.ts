@@ -26,3 +26,19 @@ export function hashCode(s) {
         h = (h << 5) - h + s.charCodeAt(i++) | 0;
     return h;
 };
+
+export function normalizeName<T>(object: T, keys: Array<string> = ['name']) : T {
+    for(let key of keys) {
+        if (key in object && object[key]) {
+            const words: Array<string> = object[key].split(' ');
+            const name = words.map((w: string) => {
+                w = w.replace(/([\-_])/g, x => '');
+                if (w.match(/[a-z]/i)) {
+                    return w.replace(/(\b[a-z\-_](?!\s))/gi, x => x.toLocaleUpperCase());
+                }
+            }).join('');
+            object[key] = name;
+        }
+    }
+    return object;
+}

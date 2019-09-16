@@ -4,9 +4,13 @@
   "description": "Syncs from YNAB to a ledger filesystem",
   "main": "index.js",
   "dependencies": {
+    "@types/cosmiconfig": "^5.0.3",
     "@types/node": "^12.7.4",
+    "@types/prompts": "^2.0.1",
     "columnify": "^1.5.4",
+    "cosmiconfig": "^5.2.1",
     "dotenv": "^8.1.0",
+    "prompts": "^2.2.1",
     "ynab": "^1.16.0"
   },
   "devDependencies": {
@@ -14,7 +18,7 @@
     "typescript": "^3.6.2"
   },
   "scripts": {
-    "start": "tsc && node dist/index.js",
+    "start": "tsc && node dist/cli.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "bin": {
