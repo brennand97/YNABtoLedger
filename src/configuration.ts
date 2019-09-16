@@ -57,7 +57,7 @@ async function buildConfig(filepath: string = defaultConfigPath) : Promise<{cfg:
 
     const onCancel = () => {
         console.log("Failed to gather nessacary information, exiting...");
-        process.exit(1);
+        process.exit(0);
     }
 
     const ynabKeyResponse = await prompts([
