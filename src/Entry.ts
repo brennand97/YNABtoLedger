@@ -1,28 +1,6 @@
 import { TransactionDetail, Account, Category, CategoryGroupWithCategories, SubTransaction, utils } from 'ynab';
 import { arraysEqual, hashCode } from './utils';
-
-export enum SplitGroup {
-    Asset = "Assets",
-    Equity = "Equity",
-    Expense = "Expenses",
-    Income = "Income",
-    Liability = "Liabilities"
-}
-
-export interface Split {
-    group: SplitGroup;
-    account: string;
-    amount: number;
-}
-
-export interface Entry {
-    id: number;
-    recordDate: string;
-    payee: string;
-    memo: string;
-    cleared: boolean;
-    splits: Array<Split>;
-}
+import { Entry, Split, SplitGroup } from './types';
 
 export function entrysEqual(a : Entry, b : Entry) {
     if (a === b) return true;

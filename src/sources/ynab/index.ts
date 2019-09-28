@@ -1,8 +1,12 @@
 import { TransactionsResponse, CategoriesResponse, AccountsResponse, API } from 'ynab';
-import { EntryBuilder, Entry } from './Entry';
-import { findbyId } from './utils';
+import { EntryBuilder } from '../../entry';
+import { findbyId } from '../../utils';
+import { Entry } from '../../types';
+import { initializeApi } from './api';
 
-async function getEntries(api: API) : Promise<Array<Entry>> {
+export async function getEntries() : Promise<Array<Entry>> {
+    const api: API = await initializeApi();
+
     const budgetResponse = await api.budgets.getBudgets();
     const budget = budgetResponse.data.budgets[1];
 
@@ -28,36 +32,4 @@ async function getEntries(api: API) : Promise<Array<Entry>> {
 
     return uniqueEntries;
 }
-
-export default async function(api: API) {
-
-    const uniqueEntries: Array<Entry> = await getEntries(api);
-
-    const output = []
-    for (let entry of uniqueEntries) {
-        output.push({
-            header: `${entry.recordDate} ${entry.cleared ? '*' : '!'} ${entry.payee}${entry.memo ? ` ; ${entry.memo}` : ''}`,
-            rows: entry.splits.map(split => {
-                return [`(${split.group}:${split.account})`, `\$${split.amount}`];
-            })
-        });
-    }
-
-    const maxRowWidth = output.reduce((a, e) => a.concat(e.rows.reduce((b, r) => b.concat(r), [])), []).reduce((max, r) => max > r.length ? max : r.length, 0);
-
-    const columnSpacing = 4;
-    const splitPadding = 4;
-    for (let row of output) {
-        console.log(row.header);
-        for (let sub_row of row.rows) {
-            let str = ' '.repeat(splitPadding);
-            str += sub_row[0];
-            str += ' '.repeat(maxRowWidth - sub_row[0].length + columnSpacing);
-            str += sub_row[1];
-            console.log(str);
-        }
-        console.log('');
-    }
-
-};
 
