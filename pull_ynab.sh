@@ -5,6 +5,7 @@ FILE=ynab.ledger
 
 GIT_SSH=true
 GIT_SSH_KEY=~/.ssh/github
+GIT_PUSH=true
 
 retrieveYNAB() {
 
@@ -15,7 +16,7 @@ retrieveYNAB() {
     fi
     git add $FILE
     git commit -m "YNAB to ledger compilation at $datetime"
-    if git ls-remote origin; then
+    if [ $GIT_PUSH = true ]; then
 
         # Enable ssh key if available
         if [ $GIT_SSH = true ]; then
