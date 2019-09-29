@@ -3,6 +3,7 @@ import { Entry } from "./types";
 export async function compile(entries: Entry[]) : Promise<string> {
     const output = []
     for (let entry of entries) {
+        entry.splits = entry.splits.sort((a, b) => a.amount < b.amount ? 1 : -1);
         output.push({
             header: `${entry.recordDate} ${entry.cleared ? '*' : '!'} ${entry.payee}${entry.memo ? ` ; ${entry.memo}` : ''}`,
             rows: entry.splits.map(split => {

@@ -30,6 +30,11 @@ export async function getEntries() : Promise<Array<Entry>> {
     const entries: Array<Entry> = transactions.map(t => entryBuilder.buildEntry(t));
     const uniqueEntries: Array<Entry> = Array.from(new Set(entries.map(e => e.id))).map(id => entries.find(e => e.id === id));
 
-    return uniqueEntries;
+    return uniqueEntries.sort((a: Entry, b: Entry) => {
+        if (a.recordDate === b.recordDate) {
+            return a.id > b.id ? 1 : -1;
+        }
+        return a.recordDate > b.recordDate ? 1 : -1;
+    });
 }
 
