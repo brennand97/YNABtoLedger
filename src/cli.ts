@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 
-import { initializeApi } from './sources/ynab/api';
 import * as ynab from './sources/ynab/index';
 import * as ledger from './ledger';
 import { Entry } from './types';

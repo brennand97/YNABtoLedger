@@ -1,3 +1,4 @@
+import { Entry, Split } from "./types";
 
 export function arraysEqual<T>(a: Array<T>, b: Array<T>) {
     if (a === b)
@@ -13,6 +14,31 @@ export function arraysEqual<T>(a: Array<T>, b: Array<T>) {
             return false;
     }
     return true;
+}
+
+export function entrysEqual(a : Entry, b : Entry) {
+    if (a === b) return true;
+    if (a == null || b == null) return false;
+    
+    function extractSplits(o : Entry) {
+        const { splits, ...obj } = o;
+        return [ splits, obj ];
+    }
+
+    const [ splits_a, ...obj_a ] = extractSplits(a);
+    const [ splits_b, ...obj_b ] = extractSplits(b);
+
+    if (obj_a !== obj_b) return false;
+    if (!arraysEqual(<Array<Split>>splits_a, <Array<Split>>splits_b)) return false;
+
+    return true;
+}
+
+export function entrySort(a: Entry, b: Entry) {
+    if (a.recordDate === b.recordDate) {
+        return a.id > b.id ? 1 : -1;
+    }
+    return a.recordDate > b.recordDate ? 1 : -1;
 }
 
 export function findbyId(list, id) {

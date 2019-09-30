@@ -1,6 +1,12 @@
-import { Entry } from "./types";
+import { Entry, LedgerEntry, LedgerRowType, LedgerRow, Split } from "./types";
+import { entrySort } from "./utils";
 
 export async function compile(entries: Entry[]) : Promise<string> {
+    // Sort to make sure there is a deterministic output
+    entries = entries.sort(entrySort);
+
+    //const ledgerEntries = buildLedgerEntries(entries);
+
     const output = []
     for (let entry of entries) {
         entry.splits = entry.splits.sort((a, b) => a.amount < b.amount ? 1 : -1);
@@ -32,4 +38,34 @@ export async function compile(entries: Entry[]) : Promise<string> {
     }
 
     return output_string;
+}
+
+function buildLedgerEntries(entries: Entry[]) : LedgerEntry[] {
+    return entries.map(entry => {
+        return {
+            header: `${entry.recordDate} ${entry.cleared ? '*' : '!'} ${entry.payee}`,
+            rows: [
+                ...(entry.memo
+                    ? [{
+                        type: LedgerRowType.Comment,
+                        values: [`; ${entry.memo}`] 
+                    }]
+                    : []),
+                ...buildLedgerRowSplits(entry.splits)
+            ]
+        };
+    });
+}
+
+function buildLedgerRowSplits(splits: Split[]) : LedgerRow[] {
+    splits = splits.sort((a, b) => a.amount < b.amount ? 1 : -1);
+    return splits.map(split => {
+        return {
+            type: LedgerRowType.Split,
+            values: [
+                `(${split.group}:${split.account})`,
+                `\$${split.amount}`
+            ]
+        }
+    });
 }

@@ -1,26 +1,8 @@
 import { TransactionDetail, Account, Category, CategoryGroupWithCategories, SubTransaction, utils } from 'ynab';
-import { arraysEqual, hashCode } from './utils';
-import { Entry, Split, SplitGroup } from './types';
+import { hashCode } from '../../utils';
+import { Entry, SplitGroup } from '../../types';
 
-export function entrysEqual(a : Entry, b : Entry) {
-    if (a === b) return true;
-    if (a == null || b == null) return false;
-    
-    function extractSplits(o : Entry) {
-        const { splits, ...obj } = o;
-        return [ splits, obj ];
-    }
-
-    const [ splits_a, ...obj_a ] = extractSplits(a);
-    const [ splits_b, ...obj_b ] = extractSplits(b);
-
-    if (obj_a !== obj_b) return false;
-    if (!arraysEqual(<Array<Split>>splits_a, <Array<Split>>splits_b)) return false;
-
-    return true;
-}
-
-export class EntryBuilder {
+export class YNABEntryBuilder {
     transactionLookup: (id: string) => TransactionDetail;
     accountLookup: (id: string) => Account;
     categoryLookup: (id: string) => Category;

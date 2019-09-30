@@ -29,3 +29,18 @@ export interface Entry {
     cleared: boolean;
     splits: Array<Split>;
 }
+
+export interface LedgerEntry {
+    header: string;
+    rows: LedgerRow[];
+}
+
+export enum LedgerRowType {
+    Comment = "Comment",
+    Split = "Split"
+}
+
+export interface LedgerRow {
+    type: LedgerRowType;
+    values: string[];
+}

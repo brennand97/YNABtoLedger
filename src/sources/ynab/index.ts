@@ -1,8 +1,8 @@
 import { TransactionsResponse, CategoriesResponse, AccountsResponse, API } from 'ynab';
-import { EntryBuilder } from '../../entry';
 import { findbyId } from '../../utils';
 import { Entry } from '../../types';
 import { initializeApi } from './api';
+import { YNABEntryBuilder } from './entrybuilder';
 
 export async function getEntries() : Promise<Array<Entry>> {
     const api: API = await initializeApi();
@@ -20,7 +20,7 @@ export async function getEntries() : Promise<Array<Entry>> {
     const transactionResponse : TransactionsResponse = await api.transactions.getTransactions(budget.id);
     const transactions = transactionResponse.data.transactions;
 
-    const entryBuilder: EntryBuilder = new EntryBuilder(
+    const entryBuilder: YNABEntryBuilder = new YNABEntryBuilder(
         (id: string) => findbyId(transactions, id),
         (id: string) => findbyId(accounts, id),
         (id: string) => findbyId(categories, id),
@@ -30,11 +30,6 @@ export async function getEntries() : Promise<Array<Entry>> {
     const entries: Array<Entry> = transactions.map(t => entryBuilder.buildEntry(t));
     const uniqueEntries: Array<Entry> = Array.from(new Set(entries.map(e => e.id))).map(id => entries.find(e => e.id === id));
 
-    return uniqueEntries.sort((a: Entry, b: Entry) => {
-        if (a.recordDate === b.recordDate) {
-            return a.id > b.id ? 1 : -1;
-        }
-        return a.recordDate > b.recordDate ? 1 : -1;
-    });
+    return uniqueEntries;
 }
 
