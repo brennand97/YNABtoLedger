@@ -43,14 +43,17 @@ export async function compile(entries: Entry[]) : Promise<string> {
 function buildLedgerEntries(entries: Entry[]) : LedgerEntry[] {
     return entries.map(entry => {
         return {
+            // Header format: '{record date} {* | !} {payee}'
             header: `${entry.recordDate} ${entry.cleared ? '*' : '!'} ${entry.payee}`,
             rows: [
+                // Optional comment row: '; {memo}'
                 ...(entry.memo
                     ? [{
                         type: LedgerRowType.Comment,
                         values: [`; ${entry.memo}`] 
                     }]
                     : []),
+                // Example split row: '({account name}) ${amount}'
                 ...buildLedgerRowSplits(entry.splits)
             ]
         };
