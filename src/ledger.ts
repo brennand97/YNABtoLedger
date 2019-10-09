@@ -23,29 +23,10 @@ export async function compile(entries: Entry[]) : Promise<string> {
         });
     }
 
-    //const maxRowWidth = output.reduce((a, e) => a.concat(e.rows.reduce((b, r) => b.concat(r), [])), []).reduce((max, r) => max > r.length ? max : r.length, 0);
     const maxRowWidth = calculateMaxAccountColumnWidth(ledgerEntries);
+    const finalString = ledgerEntries.map(entry => ledgerEntryToString(entry, maxRowWidth)).reduce((memo, s) => memo.concat(s, '\n'), '');
 
-    //const finalString = ledgerEntries.map(entry => ledgerEntryToString(entry, maxRowWidth)).reduce(''.concat, '')
-
-    let output_string: string = '';
-
-    const columnSpacing = 4;
-    const splitPadding = 4;
-    for (let row of output) {
-        output_string += `${row.header}\n`;
-        for (let sub_row of row.rows) {
-            let str = ' '.repeat(splitPadding);
-            str += sub_row[0];
-            str += ' '.repeat(maxRowWidth - sub_row[0].length + columnSpacing);
-            str += sub_row[1];
-            
-            output_string += `${str}\n`;
-        }
-        output_string += '\n';
-    }
-
-    return output_string;
+    return finalString;
 }
 
 function ledgerEntryToString(
@@ -58,10 +39,16 @@ function ledgerEntryToString(
     output_string += `${entry.header}\n`;
     for (let sub_row of entry.rows) {
         let str = ' '.repeat(splitPadding);
-        str += sub_row[0];
-        str += ' '.repeat(maxAccountWidth - sub_row[0].length + columnSpacing);
-        str += sub_row[1];
-        
+        switch (sub_row.type) {
+            case LedgerRowType.Comment:
+                str += sub_row.values[0];
+                break;
+            case LedgerRowType.Split:
+                str += sub_row.values[0];
+                str += ' '.repeat(maxAccountWidth - sub_row.values[0].length + columnSpacing);
+                str += sub_row.values[1];
+                break;
+        }
         output_string += `${str}\n`;
     }
     return output_string;
@@ -71,6 +58,7 @@ function calculateMaxAccountColumnWidth(ledgerEntries: LedgerEntry[]) : number {
     return Math.max(...ledgerEntries.reduce((array: number[], entry: LedgerEntry) => [
         ...array,
         ...entry.rows.filter(row => row.type === LedgerRowType.Split)
+                     .filter(row => row.values.length > 0)
                      .map(row => row.values[0].length)
     ], []));
 }
