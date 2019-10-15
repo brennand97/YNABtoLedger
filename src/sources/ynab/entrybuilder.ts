@@ -1,5 +1,5 @@
 import { TransactionDetail, Account, Category, CategoryGroupWithCategories, SubTransaction, utils } from 'ynab';
-import { hashCode } from '../../utils';
+import { hashCode, normalizeAccountName, validateAccountName } from '../../utils';
 import { Entry, SplitGroup } from '../../types';
 
 export class YNABEntryBuilder {
@@ -21,17 +21,22 @@ export class YNABEntryBuilder {
     }
 
     public buildEntry(transaction: TransactionDetail): Entry {
-        if (transaction.transfer_account_id !== null) {
-            // Transfer Case
-            return this.buildTransferEntry(transaction);
-        }
-        else if (transaction.subtransactions.length === 0) {
-            // Standard Case
-            return this.buildStandardEntry(transaction);
-        }
-        else {
-            // Split Case
-            return this.buildSplitEntry(transaction);
+        try {
+            if (transaction.transfer_account_id !== null) {
+                // Transfer Case
+                return this.buildTransferEntry(transaction);
+            }
+            else if (transaction.subtransactions.length === 0) {
+                // Standard Case
+                return this.buildStandardEntry(transaction);
+            }
+            else {
+                // Split Case
+                return this.buildSplitEntry(transaction);
+            }
+        } catch (e) {
+            console.error(`Could not build entry for YNAB transaction:
+                           ${JSON.stringify(transaction)}`, e)
         }
     }
 
@@ -177,27 +182,36 @@ export class YNABEntryBuilder {
         transaction: TransactionDetail,
         account: Account) : string
     {
-        switch (account.type) {
-            case Account.TypeEnum.CreditCard:
-            case Account.TypeEnum.LineOfCredit:
-                return `Credit:${account.name}`;
-            case Account.TypeEnum.Mortgage:
-                return `Mortgage:${account.name}`;
-            case Account.TypeEnum.OtherLiability:
-            case Account.TypeEnum.OtherAsset:
-            case Account.TypeEnum.Cash:
-            case Account.TypeEnum.PayPal:
-                return `Other:${account.name}`;
-            case Account.TypeEnum.Checking:
-                return `Checking:${account.name}`;
-            case Account.TypeEnum.Savings:
-                return `Savings:${account.name}`;
-            case Account.TypeEnum.InvestmentAccount:
-            case Account.TypeEnum.MerchantAccount:
-                return `Investment:${account.name}`;
-            default:
-                return account.name;
+        const accountName = normalizeAccountName((() => {
+            switch (account.type) {
+                case Account.TypeEnum.CreditCard:
+                case Account.TypeEnum.LineOfCredit:
+                    return `Credit:${account.name}`;
+                case Account.TypeEnum.Mortgage:
+                    return `Mortgage:${account.name}`;
+                case Account.TypeEnum.OtherLiability:
+                case Account.TypeEnum.OtherAsset:
+                case Account.TypeEnum.Cash:
+                case Account.TypeEnum.PayPal:
+                    return `Other:${account.name}`;
+                case Account.TypeEnum.Checking:
+                    return `Checking:${account.name}`;
+                case Account.TypeEnum.Savings:
+                    return `Savings:${account.name}`;
+                case Account.TypeEnum.InvestmentAccount:
+                case Account.TypeEnum.MerchantAccount:
+                    return `Investment:${account.name}`;
+                default:
+                    return account.name;
+            }
+        })());
+
+        let validation = validateAccountName(accountName)
+        if (validation) {
+            throw new Error(validation.error);
         }
+
+        return accountName;
     }
 
     private getSplitAccountName(

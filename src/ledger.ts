@@ -6,25 +6,10 @@ export async function compile(entries: Entry[]) : Promise<string> {
     entries = entries.sort(entrySort);
 
     const ledgerEntries = buildLedgerEntries(entries);
-
-    const output = []
-    for (let entry of entries) {
-        entry.splits = entry.splits.sort((a, b) => {
-            if (a.amount === b.amount) {
-                return a.account > b.account ? 1 : -1;
-            }
-            return a.amount < b.amount ? 1 : -1;
-        });
-        output.push({
-            header: `${entry.recordDate} ${entry.cleared ? '*' : '!'} ${entry.payee}${entry.memo ? ` ; ${entry.memo}` : ''}`,
-            rows: entry.splits.map(split => {
-                return [`(${split.group}:${split.account})`, `\$${split.amount}`];
-            })
-        });
-    }
-
     const maxRowWidth = calculateMaxAccountColumnWidth(ledgerEntries);
-    const finalString = ledgerEntries.map(entry => ledgerEntryToString(entry, maxRowWidth)).reduce((memo, s) => memo.concat(s, '\n'), '');
+    const finalString = ledgerEntries
+        .map(entry => ledgerEntryToString(entry, maxRowWidth))
+        .reduce((memo, s) => memo.concat(s, '\n'), '');
 
     return finalString;
 }
@@ -76,7 +61,7 @@ function buildLedgerEntries(entries: Entry[]) : LedgerEntry[] {
                         values: [`; ${entry.memo}`] 
                     }]
                     : []),
-                // Example split row: '({account name}) ${amount}'
+                // Example split row: '{account group}:{account name} ${amount}'
                 ...buildLedgerRowSplits(entry.splits)
             ]
         };
@@ -94,7 +79,7 @@ function buildLedgerRowSplits(splits: Split[]) : LedgerRow[] {
         return {
             type: LedgerRowType.Split,
             values: [
-                `(${split.group}:${split.account})`,
+                `${split.group}:${split.account}`,
                 `\$${split.amount}`
             ]
         }

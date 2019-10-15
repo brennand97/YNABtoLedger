@@ -1,5 +1,5 @@
 import { TransactionsResponse, CategoriesResponse, AccountsResponse, API } from 'ynab';
-import { findbyId } from '../../utils';
+import { findbyId, uniqueElements } from '../../utils';
 import { Entry } from '../../types';
 import { initializeApi } from './api';
 import { YNABEntryBuilder } from './entrybuilder';
@@ -28,7 +28,7 @@ export async function getEntries() : Promise<Array<Entry>> {
     );
 
     const entries: Array<Entry> = transactions.map(t => entryBuilder.buildEntry(t));
-    const uniqueEntries: Array<Entry> = Array.from(new Set(entries.map(e => e.id))).map(id => entries.find(e => e.id === id));
+    const uniqueEntries: Array<Entry> = uniqueElements((e: Entry) => e.id, entries);
 
     return uniqueEntries;
 }
