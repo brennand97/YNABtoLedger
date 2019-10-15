@@ -178,6 +178,7 @@ export class YNABEntryBuilder {
     private getAccountAccountName(
         transaction: TransactionDetail,
         account: Account): string {
+
         const accountName = normalizeAccountName((() => {
             switch (account.type) {
                 case Account.TypeEnum.CreditCard:
@@ -201,11 +202,6 @@ export class YNABEntryBuilder {
                     return account.name;
             }
         })());
-
-        const validation = validateAccountName(accountName);
-        if (validation) {
-            throw new Error(validation.error);
-        }
 
         return accountName;
     }

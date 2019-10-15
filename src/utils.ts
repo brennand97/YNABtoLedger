@@ -71,8 +71,8 @@ export function hashCode(s) {
 export const normalizeAccountName = (account: string): string =>
     account.replace(/\s/gi, ' ').replace(/\s{2,}/gi, ' ').trim();
 
-export const validateAccountName = (account: string): {error?: string} =>
-    /^[a-z]((?!\s{2}).)*$/gi.test(account) ? undefined : {error: 'Invalid account name'};
+export const validateAccountName = (account: string): boolean =>
+    /^[a-z]((?!\s{2}).)*$/gi.test(account);
 
 export function normalizeName<T>(object: T, keys: string[] = ['name']): T {
     for (const key of keys) {
