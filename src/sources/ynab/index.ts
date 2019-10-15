@@ -1,23 +1,23 @@
-import { TransactionsResponse, CategoriesResponse, AccountsResponse, API } from 'ynab';
+import { AccountsResponse, API, CategoriesResponse, TransactionsResponse } from 'ynab';
+import { IEntry } from '../../types';
 import { findbyId, uniqueElements } from '../../utils';
-import { Entry } from '../../types';
 import { initializeApi } from './api';
 import { YNABEntryBuilder } from './entrybuilder';
 
-export async function getEntries() : Promise<Array<Entry>> {
+export async function getEntries(): Promise<IEntry[]> {
     const api: API = await initializeApi();
 
     const budgetResponse = await api.budgets.getBudgets();
     const budget = budgetResponse.data.budgets[1];
 
-    const accountResponse : AccountsResponse = await api.accounts.getAccounts(budget.id);
+    const accountResponse: AccountsResponse = await api.accounts.getAccounts(budget.id);
     const accounts = accountResponse.data.accounts;
 
-    const categoryResponse : CategoriesResponse = await api.categories.getCategories(budget.id);
+    const categoryResponse: CategoriesResponse = await api.categories.getCategories(budget.id);
     const categoryGroups = categoryResponse.data.category_groups;
     const categories = categoryGroups.map(e => e.categories).reduce((a, b) => a.concat(b), []);
 
-    const transactionResponse : TransactionsResponse = await api.transactions.getTransactions(budget.id);
+    const transactionResponse: TransactionsResponse = await api.transactions.getTransactions(budget.id);
     const transactions = transactionResponse.data.transactions;
 
     const entryBuilder: YNABEntryBuilder = new YNABEntryBuilder(
@@ -27,9 +27,8 @@ export async function getEntries() : Promise<Array<Entry>> {
         (id: string) => findbyId(categoryGroups, id)
     );
 
-    const entries: Array<Entry> = transactions.map(t => entryBuilder.buildEntry(t));
-    const uniqueEntries: Array<Entry> = uniqueElements((e: Entry) => e.id, entries);
+    const entries: IEntry[] = transactions.map(t => entryBuilder.buildEntry(t));
+    const uniqueEntries: IEntry[] = uniqueElements((e: IEntry) => e.id, entries);
 
     return uniqueEntries;
 }
-

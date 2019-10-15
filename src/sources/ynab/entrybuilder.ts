@@ -1,17 +1,17 @@
-import { TransactionDetail, Account, Category, CategoryGroupWithCategories, SubTransaction, utils } from 'ynab';
+import { Account, Category, CategoryGroupWithCategories, SubTransaction, TransactionDetail, utils } from 'ynab';
+import { IEntry, SplitGroup } from '../../types';
 import { hashCode, normalizeAccountName, validateAccountName } from '../../utils';
-import { Entry, SplitGroup } from '../../types';
 
 export class YNABEntryBuilder {
-    transactionLookup: (id: string) => TransactionDetail;
-    accountLookup: (id: string) => Account;
-    categoryLookup: (id: string) => Category;
-    categoryGroupLookup: (id: string) => CategoryGroupWithCategories;
-    
+    public transactionLookup: (id: string) => TransactionDetail;
+    public accountLookup: (id: string) => Account;
+    public categoryLookup: (id: string) => Category;
+    public categoryGroupLookup: (id: string) => CategoryGroupWithCategories;
+
     constructor(
-        transactionsLookup: ((id: string) => TransactionDetail), 
-        accountLookup: ((id: string) => Account), 
-        categoryLookup: ((id: string) => Category), 
+        transactionsLookup: ((id: string) => TransactionDetail),
+        accountLookup: ((id: string) => Account),
+        categoryLookup: ((id: string) => Category),
         categoryGroupLookup: ((id: string) => CategoryGroupWithCategories)
     ) {
         this.transactionLookup = transactionsLookup;
@@ -20,67 +20,65 @@ export class YNABEntryBuilder {
         this.categoryGroupLookup = categoryGroupLookup;
     }
 
-    public buildEntry(transaction: TransactionDetail): Entry {
+    public buildEntry(transaction: TransactionDetail): IEntry {
         try {
             if (transaction.transfer_account_id !== null) {
                 // Transfer Case
                 return this.buildTransferEntry(transaction);
-            }
-            else if (transaction.subtransactions.length === 0) {
+            } else if (transaction.subtransactions.length === 0) {
                 // Standard Case
                 return this.buildStandardEntry(transaction);
-            }
-            else {
+            } else {
                 // Split Case
                 return this.buildSplitEntry(transaction);
             }
         } catch (e) {
             console.error(`Could not build entry for YNAB transaction:
-                           ${JSON.stringify(transaction)}`, e)
+                           ${JSON.stringify(transaction)}`, e);
         }
     }
 
-    private buildDefaultEntry(transaction: TransactionDetail): Entry {
+    private buildDefaultEntry(transaction: TransactionDetail): IEntry {
         return {
-            id: hashCode(transaction.id),
-            recordDate: transaction.date,
-            payee: transaction.payee_name,
-            memo: transaction.memo,
             cleared: this.isCleared(transaction.cleared),
-            splits: []
+            id: hashCode(transaction.id),
+            memo: transaction.memo,
+            payee: transaction.payee_name,
+            recordDate: transaction.date,
+            splits: [],
         };
     }
 
-    private buildTransferEntry(transaction: TransactionDetail): Entry {
+    private buildTransferEntry(transaction: TransactionDetail): IEntry {
         const account = this.accountLookup(transaction.account_id);
-        const transfer_transaction = this.transactionLookup(transaction.transfer_transaction_id);
-        const transfer_account = this.accountLookup(transaction.transfer_account_id);
+        const transferTransaction = this.transactionLookup(transaction.transfer_transaction_id);
+        const transferAccount = this.accountLookup(transaction.transfer_account_id);
         return {
             ...this.buildDefaultEntry(transaction),
-            id: hashCode([transaction.id, transfer_transaction.id].sort().join('')),
-            payee: "Transfer",
+            id: hashCode([transaction.id, transferTransaction.id].sort().join('')),
+            payee: 'Transfer',
             splits: [
                 {
-                    group: this.getAccountSplitGroup(account),
                     account: this.getAccountAccountName(
                         transaction,
                         account
                     ),
-                    amount: this.getAccountAmount(transaction, account)
+                    amount: this.getAccountAmount(transaction, account),
+                    group: this.getAccountSplitGroup(account),
                 },
                 {
-                    group: this.getAccountSplitGroup(transfer_account),
                     account: this.getAccountAccountName(
-                        transfer_transaction,
-                        transfer_account
+                        transferTransaction,
+                        transferAccount
                     ),
-                    amount: this.getAccountAmount(transfer_transaction, transfer_account)
-                }
-            ]
+                    amount: this.getAccountAmount(transferTransaction, transferAccount),
+                    group: this.getAccountSplitGroup(transferAccount),
+                },
+            ],
         };
     }
 
-    private buildStandardEntry(transaction: TransactionDetail): Entry {
+    private buildStandardEntry(transaction: TransactionDetail): IEntry {
         const account = this.accountLookup(transaction.account_id);
         const category: Category = this.categoryLookup(transaction.category_id);
         const categoryGroup: CategoryGroupWithCategories = this.getCategoryGroup(category);
@@ -88,53 +86,53 @@ export class YNABEntryBuilder {
             ...this.buildDefaultEntry(transaction),
             splits: [
                 {
-                    group: this.getAccountSplitGroup(account),
                     account: this.getAccountAccountName(
                         transaction,
                         account
                     ),
-                    amount: this.getAccountAmount(transaction, account)
+                    amount: this.getAccountAmount(transaction, account),
+                    group: this.getAccountSplitGroup(account),
                 },
                 {
-                    group: this.getCategorySplitGroup(transaction, category),
                     account: this.getSplitAccountName(
                         transaction,
                         category,
                         categoryGroup
                     ),
-                    amount: utils.convertMilliUnitsToCurrencyAmount(-transaction.amount)
-                }
-            ]
+                    amount: utils.convertMilliUnitsToCurrencyAmount(-transaction.amount),
+                    group: this.getCategorySplitGroup(transaction, category),
+                },
+            ],
         };
     }
 
-    private buildSplitEntry(transaction: TransactionDetail): Entry {
+    private buildSplitEntry(transaction: TransactionDetail): IEntry {
         const account = this.accountLookup(transaction.account_id);
         return {
             ...this.buildDefaultEntry(transaction),
             splits: [
                 {
-                    group: this.getAccountSplitGroup(account),
                     account: this.getAccountAccountName(
                         transaction,
                         account
                     ),
-                    amount: this.getAccountAmount(transaction, account)
+                    amount: this.getAccountAmount(transaction, account),
+                    group: this.getAccountSplitGroup(account),
                 },
-                ...transaction.subtransactions.map((sub_transaction: SubTransaction) => {
-                    const category: Category = this.categoryLookup(sub_transaction.category_id);
+                ...transaction.subtransactions.map((subTransaction: SubTransaction) => {
+                    const category: Category = this.categoryLookup(subTransaction.category_id);
                     const categoryGroup: CategoryGroupWithCategories = this.getCategoryGroup(category);
                     return {
-                        group: this.getCategorySplitGroup(transaction, category),
                         account: this.getSplitAccountName(
                             transaction,
                             category,
                             categoryGroup
                         ),
-                        amount: utils.convertMilliUnitsToCurrencyAmount(-sub_transaction.amount)
+                        amount: utils.convertMilliUnitsToCurrencyAmount(-subTransaction.amount),
+                        group: this.getCategorySplitGroup(transaction, category),
                     };
-                })
-            ]
+                }),
+            ],
         };
     }
 
@@ -166,11 +164,10 @@ export class YNABEntryBuilder {
 
     private getCategorySplitGroup(transaction: TransactionDetail, category: Category): SplitGroup {
         switch (category.name) {
-            case "Inflows":
-                if (transaction.payee_name === "Starting Balance") {
+            case 'Inflows':
+                if (transaction.payee_name === 'Starting Balance') {
                     return SplitGroup.Equity;
-                }
-                else {
+                } else {
                     return SplitGroup.Income;
                 }
             default:
@@ -180,8 +177,7 @@ export class YNABEntryBuilder {
 
     private getAccountAccountName(
         transaction: TransactionDetail,
-        account: Account) : string
-    {
+        account: Account): string {
         const accountName = normalizeAccountName((() => {
             switch (account.type) {
                 case Account.TypeEnum.CreditCard:
@@ -206,7 +202,7 @@ export class YNABEntryBuilder {
             }
         })());
 
-        let validation = validateAccountName(accountName)
+        const validation = validateAccountName(accountName);
         if (validation) {
             throw new Error(validation.error);
         }
@@ -215,10 +211,9 @@ export class YNABEntryBuilder {
     }
 
     private getSplitAccountName(
-        transaction: TransactionDetail, 
-        category: Category, 
-        categoryGroup: CategoryGroupWithCategories) : string
-        {
+        transaction: TransactionDetail,
+        category: Category,
+        categoryGroup: CategoryGroupWithCategories): string {
         switch (this.getCategorySplitGroup(transaction, category)) {
             case SplitGroup.Income:
                 return `${transaction.payee_name}`;
@@ -232,5 +227,5 @@ export class YNABEntryBuilder {
     private getAccountAmount(transaction: TransactionDetail, account: Account): number {
         return utils.convertMilliUnitsToCurrencyAmount(transaction.amount);
     }
-    
+
 }

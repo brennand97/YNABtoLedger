@@ -1,46 +1,46 @@
-export interface Configuration {
-    ynab: YNABConfiguration;
+export interface IConfiguration {
+    ynab: IYNABConfiguration;
 }
 
-export interface YNABConfiguration {
+export interface IYNABConfiguration {
     api_access_token: string;
     primary_budget_id: string;
 }
 
 export enum SplitGroup {
-    Asset = "Assets",
-    Equity = "Equity",
-    Expense = "Expenses",
-    Income = "Income",
-    Liability = "Liabilities"
+    Asset = 'Assets',
+    Equity = 'Equity',
+    Expense = 'Expenses',
+    Income = 'Income',
+    Liability = 'Liabilities',
 }
 
-export interface Split {
+export interface ISplit {
     group: SplitGroup;
     account: string;
     amount: number;
 }
 
-export interface Entry {
+export interface IEntry {
     id: number;
     recordDate: string;
     payee: string;
     memo: string;
     cleared: boolean;
-    splits: Array<Split>;
+    splits: ISplit[];
 }
 
-export interface LedgerEntry {
+export interface ILedgerEntry {
     header: string;
-    rows: LedgerRow[];
+    rows: ILedgerRow[];
 }
 
 export enum LedgerRowType {
-    Comment = "Comment",
-    Split = "Split"
+    Comment = 'Comment',
+    Split = 'Split',
 }
 
-export interface LedgerRow {
+export interface ILedgerRow {
     type: LedgerRowType;
     values: string[];
 }
