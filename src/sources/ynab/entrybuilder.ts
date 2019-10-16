@@ -233,7 +233,7 @@ export class YNABEntryBuilder {
             this.dedupLogger.warn(
                 'ACCOUNT_NAME_NORMALIZATION_WARNING',
                 `Account name '${accountName}' is invalid, normalizing to '${normalizedAccountName}'`
-            )
+            );
             return normalizedAccountName;
         }
 
