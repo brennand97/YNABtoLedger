@@ -68,11 +68,12 @@ export function hashCode(s) {
 
 // ---------------------- Normalization and validation functions ----------------------
 
+// Replace chains of spaces with one space, and remove illegal characters
 export const normalizeAccountName = (account: string): string =>
-    account.replace(/\s/gi, ' ').replace(/\s{2,}/gi, ' ').trim();
+    account.replace(/\s/gi, ' ').replace(/\s{2,}/gi, ' ').replace(/[()[\]#;%*|]/gi, '').trim();
 
 export const validateAccountName = (account: string): boolean =>
-    /^[a-z]((?!\s{2}).)*$/gi.test(account);
+    /^((?!\s{2}|[()[\]#;%*|]).)*$/gi.test(account); // No double space or one of: ()[]#;%*|
 
 export function normalizeName<T>(object: T, keys: string[] = ['name']): T {
     for (const key of keys) {

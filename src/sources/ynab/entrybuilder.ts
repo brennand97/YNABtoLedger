@@ -1,4 +1,5 @@
 import { Account, Category, CategoryGroupWithCategories, SubTransaction, TransactionDetail, utils } from 'ynab';
+import { DedupLogger } from '../../logging';
 import { IEntry, SplitGroup } from '../../types';
 import { hashCode, normalizeAccountName, validateAccountName } from '../../utils';
 
@@ -7,6 +8,7 @@ export class YNABEntryBuilder {
     public accountLookup: (id: string) => Account;
     public categoryLookup: (id: string) => Category;
     public categoryGroupLookup: (id: string) => CategoryGroupWithCategories;
+    private dedupLogger: DedupLogger;
 
     constructor(
         transactionsLookup: ((id: string) => TransactionDetail),
@@ -18,6 +20,7 @@ export class YNABEntryBuilder {
         this.accountLookup = accountLookup;
         this.categoryLookup = categoryLookup;
         this.categoryGroupLookup = categoryGroupLookup;
+        this.dedupLogger = new DedupLogger('YNAB');
     }
 
     public buildEntry(transaction: TransactionDetail): IEntry {
@@ -179,7 +182,7 @@ export class YNABEntryBuilder {
         transaction: TransactionDetail,
         account: Account): string {
 
-        const accountName = normalizeAccountName((() => {
+        const accountName = (() => {
             switch (account.type) {
                 case Account.TypeEnum.CreditCard:
                 case Account.TypeEnum.LineOfCredit:
@@ -201,23 +204,40 @@ export class YNABEntryBuilder {
                 default:
                     return account.name;
             }
-        })());
+        })();
 
-        return accountName;
+        return this.validateAndNormalizeAccountName(accountName);
     }
 
     private getSplitAccountName(
         transaction: TransactionDetail,
         category: Category,
         categoryGroup: CategoryGroupWithCategories): string {
-        switch (this.getCategorySplitGroup(transaction, category)) {
-            case SplitGroup.Income:
-                return `${transaction.payee_name}`;
-            case SplitGroup.Equity:
-                return 'Starting Balance';
-            case SplitGroup.Expense:
-                return `${categoryGroup.name}:${category.name}`;
+        const accountName = (() => {
+            switch (this.getCategorySplitGroup(transaction, category)) {
+                case SplitGroup.Income:
+                    return `${transaction.payee_name}`;
+                case SplitGroup.Equity:
+                    return 'Starting Balance';
+                case SplitGroup.Expense:
+                    return `${categoryGroup.name}:${category.name}`;
+            }
+        })();
+
+        return this.validateAndNormalizeAccountName(accountName);
+    }
+
+    private validateAndNormalizeAccountName(accountName: string): string {
+        if (!validateAccountName(accountName)) {
+            const normalizedAccountName = normalizeAccountName(accountName);
+            this.dedupLogger.warn(
+                'ACCOUNT_NAME_NORMALIZATION_WARNING',
+                `Account name '${accountName}' is invalid, normalizing to '${normalizedAccountName}`
+            )
+            return normalizedAccountName;
         }
+
+        return accountName;
     }
 
     private getAccountAmount(transaction: TransactionDetail, account: Account): number {
