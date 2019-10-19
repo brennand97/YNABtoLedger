@@ -38,12 +38,19 @@ export function entrysEqual(a: IEntry, b: IEntry): boolean {
     return true;
 }
 
-export function entrySort(a: IEntry, b: IEntry) {
+export function entrySort(a: IEntry, b: IEntry): number {
     if (a.recordDate === b.recordDate) {
         return a.id > b.id ? 1 : -1;
     }
     return a.recordDate > b.recordDate ? 1 : -1;
 }
+
+export function splitSort(a: ISplit, b: ISplit): number {
+    if (a.amount === b.amount) {
+        return a.account > b.account ? 1 : -1;
+    }
+    return a.amount < b.amount ? 1 : -1;
+};
 
 export function uniqueElements<T>(keyFunc: (T) => any, list: T[]): T[] {
     return Array.from(new Set(list.map(keyFunc))).map(id => list.find(e => keyFunc(e) === id));

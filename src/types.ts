@@ -21,7 +21,13 @@ export interface ISplit {
     amount: number;
 }
 
+export enum EntryType {
+    Transaction = 'Transaction',
+    Budget = 'Budget',
+}
+
 export interface IEntry {
+    type: EntryType;
     id: number;
     recordDate: string;
     payee: string;

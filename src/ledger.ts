@@ -1,5 +1,5 @@
 import { IEntry, ILedgerEntry, ILedgerRow, ISplit, LedgerRowType } from './types';
-import { entrySort } from './utils';
+import { entrySort, splitSort } from './utils';
 
 export async function compile(entries: IEntry[]): Promise<string> {
     // Sort to make sure there is a deterministic output
@@ -69,12 +69,7 @@ function buildLedgerEntries(entries: IEntry[]): ILedgerEntry[] {
 }
 
 function buildLedgerRowSplits(splits: ISplit[]): ILedgerRow[] {
-    splits = splits.sort((a, b) => {
-        if (a.amount === b.amount) {
-            return a.account > b.account ? 1 : -1;
-        }
-        return a.amount < b.amount ? 1 : -1;
-    });
+    splits = splits.sort(splitSort);
     return splits.map(split => {
         return {
             type: LedgerRowType.Split,

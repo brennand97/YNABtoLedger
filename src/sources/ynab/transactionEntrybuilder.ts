@@ -1,7 +1,7 @@
 import { Account, Category, CategoryGroupWithCategories, SubTransaction, TransactionDetail, utils } from 'ynab';
 import { DedupLogger } from '../../logging';
-import { IEntry, SplitGroup } from '../../types';
-import { hashCode, normalizeAccountName, validateAccountName } from '../../utils';
+import { EntryType, IEntry, SplitGroup } from '../../types';
+import { hashCode, normalizeAccountName, splitSort, validateAccountName } from '../../utils';
 
 export class YNABEntryBuilder {
     public transactionLookup: (id: string) => TransactionDetail;
@@ -24,20 +24,15 @@ export class YNABEntryBuilder {
     }
 
     public buildEntry(transaction: TransactionDetail): IEntry {
-        try {
-            if (transaction.transfer_account_id !== null) {
-                // Transfer Case
-                return this.buildTransferEntry(transaction);
-            } else if (transaction.subtransactions.length === 0) {
-                // Standard Case
-                return this.buildStandardEntry(transaction);
-            } else {
-                // Split Case
-                return this.buildSplitEntry(transaction);
-            }
-        } catch (e) {
-            console.error(`Could not build entry for YNAB transaction:
-                           ${JSON.stringify(transaction)}`, e);
+        if (transaction.transfer_account_id !== null) {
+            // Transfer Case
+            return this.buildTransferEntry(transaction);
+        } else if (transaction.subtransactions.length === 0) {
+            // Standard Case
+            return this.buildStandardEntry(transaction);
+        } else {
+            // Split Case
+            return this.buildSplitEntry(transaction);
         }
     }
 
@@ -49,6 +44,7 @@ export class YNABEntryBuilder {
             payee: transaction.payee_name,
             recordDate: transaction.date,
             splits: [],
+            type: EntryType.Transaction,
         };
     }
 
@@ -77,7 +73,7 @@ export class YNABEntryBuilder {
                     amount: this.getAccountAmount(transferTransaction, transferAccount),
                     group: this.getAccountSplitGroup(transferAccount),
                 },
-            ],
+            ].sort(splitSort),
         };
     }
 
@@ -105,7 +101,7 @@ export class YNABEntryBuilder {
                     amount: utils.convertMilliUnitsToCurrencyAmount(-transaction.amount),
                     group: this.getCategorySplitGroup(transaction, category),
                 },
-            ],
+            ].sort(splitSort),
         };
     }
 
@@ -135,7 +131,7 @@ export class YNABEntryBuilder {
                         group: this.getCategorySplitGroup(transaction, category),
                     };
                 }),
-            ],
+            ].sort(splitSort),
         };
     }
 
@@ -233,7 +229,7 @@ export class YNABEntryBuilder {
             this.dedupLogger.warn(
                 'ACCOUNT_NAME_NORMALIZATION_WARNING',
                 `Account name '${accountName}' is invalid, normalizing to '${normalizedAccountName}'`
-            )
+            );
             return normalizedAccountName;
         }
 
