@@ -5,12 +5,12 @@ import {
     BudgetSummary,
     CategoriesResponse,
     Category,
+    CategoryGroupWithCategories,
     MonthDetail,
     MonthSummariesResponse,
     MonthSummary,
     TransactionDetail,
     TransactionsResponse,
-    CategoryGroupWithCategories,
 } from 'ynab';
 
 import moment from 'moment';
@@ -18,6 +18,7 @@ import { getConfig } from '../../configuration';
 import { IConfiguration, IEntry } from '../../types';
 import { entrySort, findbyId, uniqueElements } from '../../utils';
 import { initializeApi } from './api';
+import { YNABBudgetEntryBuilder } from './budgetEntryBuilder';
 import { YNABTransactionEntryBuilder } from './transactionEntrybuilder';
 
 export async function getEntries(): Promise<IEntry[]> {
@@ -35,7 +36,7 @@ export async function getEntries(): Promise<IEntry[]> {
     const categoryGroups: CategoryGroupWithCategories[] = await getCategoryGroups(api, budgetId);
     const categories: Category[] = getCategories(categoryGroups);
     const transactions: TransactionDetail[] = await getTransactions(api, budgetId);
-    const monthCategories: MonthDetail[] = await getMonths(api, budgetId);
+    const months: MonthDetail[] = await getMonths(api, budgetId);
 
     const transactionEntryBuilder = new YNABTransactionEntryBuilder(
         (id: string) => findbyId(transactions, id),
@@ -43,10 +44,20 @@ export async function getEntries(): Promise<IEntry[]> {
         (id: string) => findbyId(categories, id),
         (id: string) => findbyId(categoryGroups, id)
     );
+    const transcationEntries: IEntry[] = transactions.map(t => transactionEntryBuilder.buildEntry(t));
 
-    const entries: IEntry[] = transactions.map(t => transactionEntryBuilder.buildEntry(t));
-    const uniqueEntries: IEntry[] = uniqueElements((e: IEntry) => e.id, entries);
+    const budgetEntryBuilder = new YNABBudgetEntryBuilder(
+        (id: string) => findbyId(transactions, id),
+        (id: string) => findbyId(accounts, id),
+        (id: string) => findbyId(categories, id),
+        (id: string) => findbyId(categoryGroups, id)
+    );
+    const budgetEntries: IEntry[] = months.map(m => budgetEntryBuilder.buildEntry(m));
 
+    const uniqueEntries: IEntry[] = uniqueElements((e: IEntry) => e.id, [
+        ...transcationEntries,
+        ...budgetEntries,
+    ]);
     return uniqueEntries.sort(entrySort);
 }
 

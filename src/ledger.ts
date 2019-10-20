@@ -1,11 +1,11 @@
-import { IEntry, ILedgerEntry, ILedgerRow, ISplit, LedgerRowType } from './types';
+import { IEntry, ILedgerEntry, ILedgerRow, ISplit, LedgerRowType, EntryType } from './types';
 import { entrySort, splitSort } from './utils';
 
 export async function compile(entries: IEntry[]): Promise<string> {
     // Sort to make sure there is a deterministic output
     entries = entries.sort(entrySort);
 
-    const ledgerEntries = buildLedgerEntries(entries);
+    const ledgerEntries = entries.map(e => buildLedgerEntry(e));
     const maxRowWidth = calculateMaxAccountColumnWidth(ledgerEntries);
     const finalString = ledgerEntries
         .map(entry => ledgerEntryToString(entry, maxRowWidth))
@@ -48,35 +48,44 @@ function calculateMaxAccountColumnWidth(ledgerEntries: ILedgerEntry[]): number {
     ], []));
 }
 
-function buildLedgerEntries(entries: IEntry[]): ILedgerEntry[] {
-    return entries.map(entry => {
-        return {
-            // Header format: '{record date} {* | !} {payee}'
-            header: `${entry.recordDate} ${entry.cleared ? '*' : '!'} ${entry.payee}`,
-            rows: [
-                // Optional comment row: '; {memo}'
-                ...(entry.memo
-                    ? [{
-                        type: LedgerRowType.Comment,
-                        values: [`; ${entry.memo}`],
-                    }]
-                    : []),
-                // Example split row: '{account group}:{account name} ${amount}'
-                ...buildLedgerRowSplits(entry.splits),
-            ],
-        };
-    });
+function buildLedgerEntry(entry: IEntry): ILedgerEntry {
+    return {
+        // Header format: '{record date} {* | !} {payee}'
+        header: `${entry.recordDate} ${entry.cleared ? '*' : '!'} ${entry.payee}`,
+        rows: [
+            // Optional comment row: '; {memo}'
+            ...(entry.memo
+                ? [{
+                    type: LedgerRowType.Comment,
+                    values: [`; ${entry.memo}`],
+                }]
+                : []),
+            // Example split row: '{account group}:{account name} ${amount}'
+            ...buildLedgerRowSplits(entry.type, entry.splits),
+        ],
+    };
 }
 
-function buildLedgerRowSplits(splits: ISplit[]): ILedgerRow[] {
+function buildLedgerRowSplits(type: EntryType, splits: ISplit[]): ILedgerRow[] {
     splits = splits.sort(splitSort);
     return splits.map(split => {
-        return {
-            type: LedgerRowType.Split,
-            values: [
-                `${split.group}:${split.account}`,
-                `\$${split.amount}`,
-            ],
-        };
+        switch(type) {
+            case EntryType.Transaction:
+                    return {
+                        type: LedgerRowType.Split,
+                        values: [
+                            `${split.group}:${split.account}`,
+                            `\$${split.amount}`,
+                        ],
+                    };
+            case EntryType.Budget:
+                    return {
+                        type: LedgerRowType.Split,
+                        values: [
+                            `[${split.group}:${split.account}]`,
+                            `\$${split.amount}`,
+                        ],
+                    };
+        }
     });
 }

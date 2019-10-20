@@ -27,7 +27,9 @@ export class YNABBudgetEntryBuilder extends YNABEntryBuilder {
             splits: [
                 {
                     account: 'Budget',
-                    amount: goalCategories.reduce((sum: number, category: Category) => sum - category.budgeted, 0),
+                    amount: this.convertAmount(
+                        goalCategories.reduce((sum: number, category: Category) => sum - category.budgeted, 0)
+                    ),
                     group: SplitGroup.Liability,
                 },
                 ...goalCategories.map(category => {
