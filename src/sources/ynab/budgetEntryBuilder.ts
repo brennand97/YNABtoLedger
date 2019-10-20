@@ -21,17 +21,16 @@ export class YNABBudgetEntryBuilder extends YNABEntryBuilder {
     }
 
     public buildEntry(month: MonthDetail): IEntry {
+        const goalCategories: Category[] = month.categories.filter(category => category.goal_type);
         return {
             ...this.buildDefaultEntry(month),
             splits: [
                 {
                     account: 'Budget',
-                    amount: month.categories.reduce((sum: number, category: Category) => sum - category.budgeted, 0),
+                    amount: goalCategories.reduce((sum: number, category: Category) => sum - category.budgeted, 0),
                     group: SplitGroup.Liability,
                 },
-                ...month.categories
-                    .filter(category => category.goal_type)
-                    .map(category => {
+                ...goalCategories.map(category => {
                         const categoryGroup: CategoryGroupWithCategories = this.getCategoryGroup(category);
                         return {
                             account: `Budget:${categoryGroup.name}:${category.name}`,
