@@ -21,7 +21,8 @@ export class YNABBudgetEntryBuilder extends YNABEntryBuilder {
     }
 
     public buildEntry(month: MonthDetail): IEntry {
-        const goalCategories: Category[] = month.categories.filter(category => category.goal_type);
+        const goalCategories: Category[] = month.categories
+            .filter(category => category.goal_type && category.budgeted !== 0);
         return {
             ...this.buildDefaultEntry(month),
             splits: [
@@ -35,7 +36,7 @@ export class YNABBudgetEntryBuilder extends YNABEntryBuilder {
                 ...goalCategories.map(category => {
                         const categoryGroup: CategoryGroupWithCategories = this.getCategoryGroup(category);
                         return {
-                            account: `Budget:${categoryGroup.name}:${category.name}`,
+                            account: `Budget:${this.validateAndNormalizeAccountName(`${categoryGroup.name}:${category.name}`)}`,
                             amount: this.convertAmount(category.budgeted),
                             group: SplitGroup.Asset,
                         };
@@ -48,7 +49,7 @@ export class YNABBudgetEntryBuilder extends YNABEntryBuilder {
         return {
             cleared: true,
             id: hashCode(month.month),
-            memo: `${month.month}${month.note ? ` - ${month.note}` : ''}`,
+            memo: month.note ? month.note : null,
             payee: 'Budget',
             recordDate: month.month,
             splits: [],
