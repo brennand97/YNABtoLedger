@@ -6,6 +6,7 @@ export class AutomaticEntry implements IEntry {
     public id: number;
     public recordDate: string;
     public memo: string;
+    public currencySymbol: string = '';
     public splits: ISplit[];
 
     public accountMatcher: string;

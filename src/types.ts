@@ -31,6 +31,7 @@ export interface IEntry {
     id: number;
     recordDate: string;
     memo: string;
+    currencySymbol: string;
     splits: ISplit[];
 
     toLedgerEntry(): ILedgerEntry;

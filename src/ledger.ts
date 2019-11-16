@@ -49,7 +49,7 @@ function calculateMaxAccountColumnWidth(ledgerEntries: ILedgerEntry[]): number {
     ], []));
 }
 
-export function buildLedgerRowSplits({type, splits}: IEntry): ILedgerRow[] {
+export function buildLedgerRowSplits({type, splits, currencySymbol}: IEntry): ILedgerRow[] {
     splits = splits.sort(splitSort);
     return splits.map(split => {
         switch (type) {
@@ -58,7 +58,7 @@ export function buildLedgerRowSplits({type, splits}: IEntry): ILedgerRow[] {
                         type: LedgerRowType.Split,
                         values: [
                             `${split.group}:${split.account}`,
-                            `\$${split.amount}`,
+                            `${currencySymbol}${split.amount}`,
                         ],
                     };
             case EntryType.Budget:
@@ -66,7 +66,7 @@ export function buildLedgerRowSplits({type, splits}: IEntry): ILedgerRow[] {
                         type: LedgerRowType.Split,
                         values: [
                             `[${split.group}:${split.account}]`,
-                            `\$${split.amount}`,
+                            `${currencySymbol}${split.amount}`,
                         ],
                     };
         }

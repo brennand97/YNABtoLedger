@@ -37,6 +37,7 @@ export class YNABTransactionEntryBuilder extends YNABEntryBuilder {
     private buildDefaultEntry(transaction: TransactionDetail): Partial<StandardEntry> {
         return {
             cleared: this.isCleared(transaction.cleared),
+            currencySymbol: '$',
             id: hashCode(transaction.id),
             memo: transaction.memo,
             payee: transaction.payee_name,

@@ -78,6 +78,7 @@ export class YNABBudgetEntryBuilder extends YNABEntryBuilder {
     private buildDefaultEntry(month: MonthDetail): Partial<StandardEntry> {
         return {
             cleared: true,
+            currencySymbol: '$',
             id: hashCode(month.month),
             memo: month.note ? month.note : null,
             payee: 'Budget',
