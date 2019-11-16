@@ -1,4 +1,6 @@
+import moment = require('moment');
 import { Account, Category, CategoryGroupWithCategories, MonthDetail, TransactionDetail } from 'ynab';
+import { AutomaticEntry } from '../../entries/AutomaticEntry';
 import { StandardEntry } from '../../entries/StandardEntry';
 import { EntryType, IEntry, SplitGroup } from '../../types';
 import { hashCode, splitSort } from '../../utils';
@@ -45,6 +47,31 @@ export class YNABBudgetEntryBuilder extends YNABEntryBuilder {
                         };
                     }),
             ].sort(splitSort),
+        });
+    }
+
+    public buildAutomaticEntry(category: Category): AutomaticEntry {
+        const categoryGroup: CategoryGroupWithCategories = this.getCategoryGroup(category);
+        const splitGroup: SplitGroup = SplitGroup.Expense;
+        const accountName: string = this.validateAndNormalizeAccountName(`${categoryGroup.name}:${category.name}`);
+        const accountMatcher = `/${splitGroup}:${accountName}/`;
+        return new AutomaticEntry({
+            accountMatcher,
+            id: hashCode(accountMatcher),
+            recordDate: moment(0).format('YYYY-MM-DD'),
+            splits: [
+                {
+                    account: 'Budget',
+                    amount: 1.0,
+                    group: SplitGroup.Liability,
+                },
+                {
+                    account: `Budget:${accountName}`,
+                    amount: -1.0,
+                    group: splitGroup,
+                },
+            ].sort(splitSort),
+            type: EntryType.Budget,
         });
     }
 
