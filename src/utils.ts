@@ -56,6 +56,21 @@ export function uniqueElements<T>(keyFunc: (T) => any, list: T[]): T[] {
     return Array.from(new Set(list.map(keyFunc))).map(id => list.find(e => keyFunc(e) === id));
 }
 
+export function reduceToMap<T, K, V>(
+    array: T[],
+    keyRetriever: ((elm: T) => K),
+    valueRetriever: ((elm: T) => V)): Map<K, V> {
+        return array.map((elm: T) => {
+            return {
+                key: keyRetriever(elm),
+                value: valueRetriever(elm),
+            };
+        }).reduce((map: Map<K, V>, {key, value}: {key: K, value: V}) => {
+            map.set(key, value);
+            return map;
+        }, new Map<K, V>());
+}
+
 export function findbyId(list, id) {
     return list.find(e => e.id ? e.id === id : false);
 }

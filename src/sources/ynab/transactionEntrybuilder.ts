@@ -1,4 +1,5 @@
-import { Account, Category, CategoryGroupWithCategories, SubTransaction, TransactionDetail, utils, MonthDetail } from 'ynab';
+import { Account, Category, CategoryGroupWithCategories, MonthDetail, SubTransaction, TransactionDetail, utils } from 'ynab';
+import { StandardEntry } from '../../entries/StandardEntry';
 import { EntryType, IEntry, SplitGroup } from '../../types';
 import { hashCode, normalizeAccountName, splitSort, validateAccountName } from '../../utils';
 import { YNABEntryBuilder } from './entryBuilder';
@@ -20,7 +21,7 @@ export class YNABTransactionEntryBuilder extends YNABEntryBuilder {
         );
     }
 
-    public buildEntry(transaction: TransactionDetail): IEntry {
+    public buildEntry(transaction: TransactionDetail): StandardEntry {
         if (transaction.transfer_account_id !== null) {
             // Transfer Case
             return this.buildTransferEntry(transaction);
@@ -33,7 +34,7 @@ export class YNABTransactionEntryBuilder extends YNABEntryBuilder {
         }
     }
 
-    private buildDefaultEntry(transaction: TransactionDetail): IEntry {
+    private buildDefaultEntry(transaction: TransactionDetail): Partial<StandardEntry> {
         return {
             cleared: this.isCleared(transaction.cleared),
             id: hashCode(transaction.id),
@@ -45,11 +46,11 @@ export class YNABTransactionEntryBuilder extends YNABEntryBuilder {
         };
     }
 
-    private buildTransferEntry(transaction: TransactionDetail): IEntry {
+    private buildTransferEntry(transaction: TransactionDetail): StandardEntry {
         const account = this.accountLookup(transaction.account_id);
         const transferTransaction = this.transactionLookup(transaction.transfer_transaction_id);
         const transferAccount = this.accountLookup(transaction.transfer_account_id);
-        return {
+        return new StandardEntry({
             ...this.buildDefaultEntry(transaction),
             id: hashCode([transaction.id, transferTransaction.id].sort().join('')),
             payee: 'Transfer',
@@ -65,14 +66,14 @@ export class YNABTransactionEntryBuilder extends YNABEntryBuilder {
                     group: this.getAccountSplitGroup(transferAccount),
                 },
             ].sort(splitSort),
-        };
+        });
     }
 
-    private buildStandardEntry(transaction: TransactionDetail): IEntry {
+    private buildStandardEntry(transaction: TransactionDetail): StandardEntry {
         const account = this.accountLookup(transaction.account_id);
         const category: Category = this.categoryLookup(transaction.category_id);
         const categoryGroup: CategoryGroupWithCategories = this.getCategoryGroup(category);
-        return {
+        return new StandardEntry({
             ...this.buildDefaultEntry(transaction),
             splits: [
                 {
@@ -90,12 +91,12 @@ export class YNABTransactionEntryBuilder extends YNABEntryBuilder {
                     group: this.getCategorySplitGroup(transaction, category),
                 },
             ].sort(splitSort),
-        };
+        });
     }
 
-    private buildSplitEntry(transaction: TransactionDetail): IEntry {
+    private buildSplitEntry(transaction: TransactionDetail): StandardEntry {
         const account = this.accountLookup(transaction.account_id);
-        return {
+        return new StandardEntry({
             ...this.buildDefaultEntry(transaction),
             splits: [
                 {
@@ -117,7 +118,7 @@ export class YNABTransactionEntryBuilder extends YNABEntryBuilder {
                     };
                 }),
             ].sort(splitSort),
-        };
+        });
     }
 
     private isCleared(cleared: TransactionDetail.ClearedEnum): boolean {

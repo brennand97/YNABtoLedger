@@ -15,8 +15,9 @@ import {
 
 import moment from 'moment';
 import { getConfig } from '../../configuration';
+import { StandardEntry } from '../../entries/StandardEntry';
 import { IConfiguration, IEntry } from '../../types';
-import { entrySort, findbyId, uniqueElements } from '../../utils';
+import { entrySort, findbyId, reduceToMap, uniqueElements } from '../../utils';
 import { initializeApi } from './api';
 import { YNABBudgetEntryBuilder } from './budgetEntryBuilder';
 import { YNABTransactionEntryBuilder } from './transactionEntrybuilder';
@@ -37,6 +38,11 @@ export async function getEntries(): Promise<IEntry[]> {
     const categories: Category[] = getCategories(categoryGroups);
     const transactions: TransactionDetail[] = await getTransactions(api, budgetId);
     const months: MonthDetail[] = await getMonths(api, budgetId);
+    const goalCategories: Map<MonthDetail, Category[]> = reduceToMap(
+        months,
+        (month: MonthDetail) => month,
+        (month: MonthDetail) => month.categories.filter(category => category.goal_type && category.budgeted !== 0)
+    );
 
     const transactionEntryBuilder = new YNABTransactionEntryBuilder(
         (id: string) => findbyId(transactions, id),
@@ -44,15 +50,16 @@ export async function getEntries(): Promise<IEntry[]> {
         (id: string) => findbyId(categories, id),
         (id: string) => findbyId(categoryGroups, id)
     );
-    const transcationEntries: IEntry[] = transactions.map(t => transactionEntryBuilder.buildEntry(t));
+    const transcationEntries: StandardEntry[] = transactions.map(t => transactionEntryBuilder.buildEntry(t));
 
     const budgetEntryBuilder = new YNABBudgetEntryBuilder(
         (id: string) => findbyId(transactions, id),
         (id: string) => findbyId(accounts, id),
         (id: string) => findbyId(categories, id),
-        (id: string) => findbyId(categoryGroups, id)
+        (id: string) => findbyId(categoryGroups, id),
+        (month: MonthDetail) => goalCategories.get(month)
     );
-    const budgetEntries: IEntry[] = months.map(m => budgetEntryBuilder.buildEntry(m));
+    const budgetEntries: StandardEntry[] = months.map(m => budgetEntryBuilder.buildEntry(m));
 
     const uniqueEntries: IEntry[] = uniqueElements((e: IEntry) => e.id, [
         ...transcationEntries,

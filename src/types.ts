@@ -30,10 +30,10 @@ export interface IEntry {
     type: EntryType;
     id: number;
     recordDate: string;
-    payee: string;
     memo: string;
-    cleared: boolean;
     splits: ISplit[];
+
+    toLedgerEntry(): ILedgerEntry;
 }
 
 export interface ILedgerEntry {

@@ -1,11 +1,12 @@
-import { IEntry, ILedgerEntry, ILedgerRow, ISplit, LedgerRowType, EntryType } from './types';
+import { StandardEntry } from './entries/StandardEntry';
+import { EntryType, IEntry, ILedgerEntry, ILedgerRow, ISplit, LedgerRowType } from './types';
 import { entrySort, splitSort } from './utils';
 
 export async function compile(entries: IEntry[]): Promise<string> {
     // Sort to make sure there is a deterministic output
     entries = entries.sort(entrySort);
 
-    const ledgerEntries = entries.map(e => buildLedgerEntry(e));
+    const ledgerEntries = entries.map(e => e.toLedgerEntry());
     const maxRowWidth = calculateMaxAccountColumnWidth(ledgerEntries);
     const finalString = ledgerEntries
         .map(entry => ledgerEntryToString(entry, maxRowWidth))
@@ -48,28 +49,10 @@ function calculateMaxAccountColumnWidth(ledgerEntries: ILedgerEntry[]): number {
     ], []));
 }
 
-function buildLedgerEntry(entry: IEntry): ILedgerEntry {
-    return {
-        // Header format: '{record date} {* | !} {payee}'
-        header: `${entry.recordDate} ${entry.cleared ? '*' : '!'} ${entry.payee}`,
-        rows: [
-            // Optional comment row: '; {memo}'
-            ...(entry.memo
-                ? [{
-                    type: LedgerRowType.Comment,
-                    values: [`; ${entry.memo}`],
-                }]
-                : []),
-            // Example split row: '{account group}:{account name} ${amount}'
-            ...buildLedgerRowSplits(entry.type, entry.splits),
-        ],
-    };
-}
-
-function buildLedgerRowSplits(type: EntryType, splits: ISplit[]): ILedgerRow[] {
+export function buildLedgerRowSplits({type, splits}: IEntry): ILedgerRow[] {
     splits = splits.sort(splitSort);
     return splits.map(split => {
-        switch(type) {
+        switch (type) {
             case EntryType.Transaction:
                     return {
                         type: LedgerRowType.Split,
