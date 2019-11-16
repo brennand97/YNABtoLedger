@@ -52,9 +52,8 @@ export class YNABBudgetEntryBuilder extends YNABEntryBuilder {
 
     public buildAutomaticEntry(category: Category): AutomaticEntry {
         const categoryGroup: CategoryGroupWithCategories = this.getCategoryGroup(category);
-        const splitGroup: SplitGroup = SplitGroup.Expense;
-        const accountName: string = this.validateAndNormalizeAccountName(`${categoryGroup.name}:${category.name}`);
-        const accountMatcher = `/${splitGroup}:${accountName}/`;
+        const accountName: string = `${this.validateAndNormalizeAccountName(`${categoryGroup.name}:${category.name}`)}`;
+        const accountMatcher = `/${SplitGroup.Expense}:${accountName}/`;
         return new AutomaticEntry({
             accountMatcher,
             id: hashCode(accountMatcher),
@@ -68,7 +67,7 @@ export class YNABBudgetEntryBuilder extends YNABEntryBuilder {
                 {
                     account: `Budget:${accountName}`,
                     amount: -1.0,
-                    group: splitGroup,
+                    group: SplitGroup.Asset,
                 },
             ].sort(splitSort),
             type: EntryType.Budget,
