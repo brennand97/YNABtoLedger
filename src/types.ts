@@ -19,6 +19,7 @@ export interface ISplit {
     group: SplitGroup;
     account: string;
     amount: number;
+    memo: string;
 }
 
 export enum EntryType {

@@ -1,4 +1,4 @@
-import { buildLedgerRowSplits } from '../ledger';
+import { buildLedgerEntryRows } from '../ledger';
 import { EntryType, IEntry, ILedgerEntry, ISplit, LedgerRowType } from '../types';
 
 export class StandardEntry implements IEntry {
@@ -29,7 +29,7 @@ export class StandardEntry implements IEntry {
                     }]
                     : []),
                 // Example split row: '{account group}:{account name} ${amount}'
-                ...buildLedgerRowSplits(this),
+                ...buildLedgerEntryRows(this),
             ],
         };
     }

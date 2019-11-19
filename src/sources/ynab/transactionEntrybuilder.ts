@@ -60,11 +60,13 @@ export class YNABTransactionEntryBuilder extends YNABEntryBuilder {
                     account: this.getAccountAccountName(account),
                     amount: this.getTransactionAccountAmount(transaction, account),
                     group: this.getAccountSplitGroup(account),
+                    memo: null,
                 },
                 {
                     account: this.getAccountAccountName(transferAccount),
                     amount: this.getTransactionAccountAmount(transferTransaction, transferAccount),
                     group: this.getAccountSplitGroup(transferAccount),
+                    memo: null,
                 },
             ].sort(splitSort),
         });
@@ -81,6 +83,7 @@ export class YNABTransactionEntryBuilder extends YNABEntryBuilder {
                     account: this.getAccountAccountName(account),
                     amount: this.getTransactionAccountAmount(transaction, account),
                     group: this.getAccountSplitGroup(account),
+                    memo: null,
                 },
                 {
                     account: this.getSplitAccountName(
@@ -90,6 +93,7 @@ export class YNABTransactionEntryBuilder extends YNABEntryBuilder {
                     ),
                     amount: utils.convertMilliUnitsToCurrencyAmount(-transaction.amount),
                     group: this.getCategorySplitGroup(transaction, category),
+                    memo: null,
                 },
             ].sort(splitSort),
         });
@@ -104,6 +108,7 @@ export class YNABTransactionEntryBuilder extends YNABEntryBuilder {
                     account: this.getAccountAccountName(account),
                     amount: this.getTransactionAccountAmount(transaction, account),
                     group: this.getAccountSplitGroup(account),
+                    memo: null,
                 },
                 ...transaction.subtransactions.map((subTransaction: SubTransaction) => {
                     const category: Category = this.categoryLookup(subTransaction.category_id);
@@ -116,6 +121,7 @@ export class YNABTransactionEntryBuilder extends YNABEntryBuilder {
                         ),
                         amount: utils.convertMilliUnitsToCurrencyAmount(-subTransaction.amount),
                         group: this.getCategorySplitGroup(transaction, category),
+                        memo: subTransaction.memo,
                     };
                 }),
             ].sort(splitSort),

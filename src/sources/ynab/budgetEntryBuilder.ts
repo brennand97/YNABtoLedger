@@ -37,6 +37,7 @@ export class YNABBudgetEntryBuilder extends YNABEntryBuilder {
                         goalCategories.reduce((sum: number, category: Category) => sum - category.budgeted, 0)
                     ),
                     group: SplitGroup.Liability,
+                    memo: null,
                 },
                 ...goalCategories.map(category => {
                         const categoryGroup: CategoryGroupWithCategories = this.getCategoryGroup(category);
@@ -44,6 +45,7 @@ export class YNABBudgetEntryBuilder extends YNABEntryBuilder {
                             account: `Budget:${this.validateAndNormalizeAccountName(`${categoryGroup.name}:${category.name}`)}`,
                             amount: this.convertAmount(category.budgeted),
                             group: SplitGroup.Asset,
+                            memo: null,
                         };
                     }),
             ].sort(splitSort),
@@ -63,11 +65,13 @@ export class YNABBudgetEntryBuilder extends YNABEntryBuilder {
                     account: 'Budget',
                     amount: 1.0,
                     group: SplitGroup.Liability,
+                    memo: null,
                 },
                 {
                     account: `Budget:${accountName}`,
                     amount: -1.0,
                     group: SplitGroup.Asset,
+                    memo: null,
                 },
             ].sort(splitSort),
             type: EntryType.Budget,
