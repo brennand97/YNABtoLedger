@@ -78,6 +78,22 @@ export function findbyId<T, K>(list: T[], idExtractor: ((elm: T) => K), id: K) {
     });
 }
 
+export function calculateMax<T>(
+    entries: T[],
+    filter: ((row: T) => boolean),
+    valueGeter: ((row: T) => number)): number {
+    return Math.max(...entries
+        .filter(filter)
+        .reduce((array: number[], entry: T) => [
+            ...array,
+            valueGeter(entry),
+    ], [0]));
+}
+
+export function flatMap<T>(list: T[][]): T[] {
+    return list.reduce((memo: T[], ts: T[]) => memo.concat(ts), []);
+}
+
 export function hashCode(s) {
     let h = 0;
     let i = 0;

@@ -1,15 +1,32 @@
 import { StandardEntry } from './entries/StandardEntry';
 import { EntryType, IEntry, ILedgerEntry, ILedgerRow, ISplit, LedgerRowType } from './types';
-import { entrySort, splitSort } from './utils';
+import { entrySort, splitSort, calculateMax, flatMap } from './utils';
 
 export async function compile(entries: IEntry[]): Promise<string> {
     // Sort to make sure there is a deterministic output
     entries = entries.sort(entrySort);
 
     const ledgerEntries = entries.map(e => e.toLedgerEntry());
-    const maxRowWidth = calculateMaxAccountColumnWidth(ledgerEntries);
+    const ledgerRows = flatMap(ledgerEntries.map(e => e.rows));
+    const maxAccountWidth = calculateMax(
+        ledgerRows,
+        row => row.type === LedgerRowType.Split && row.values.length > 0,
+        row => row.values[0].length);
+    const maxAmountWidth = calculateMax(
+        ledgerRows,
+        row => row.type === LedgerRowType.Split && row.values.length > 1,
+        row => row.values[1].length);
+    const amountDecimalOffset = calculateMax(
+        ledgerRows,
+        row => row.type === LedgerRowType.Split && row.values.length > 1 && row.values[1].includes('.'),
+        row => row.values[1].indexOf('.'));
     const finalString = ledgerEntries
-        .map(entry => ledgerEntryToString(entry, maxRowWidth))
+        .map(entry => ledgerEntryToString(
+            entry,
+            maxAccountWidth,
+            maxAmountWidth,
+            amountDecimalOffset,
+            2))
         .reduce((memo, s) => memo.concat(s, '\n'), '');
 
     return finalString;
@@ -18,6 +35,8 @@ export async function compile(entries: IEntry[]): Promise<string> {
 function ledgerEntryToString(
     entry: ILedgerEntry,
     maxAccountWidth: number,
+    maxAmountWidth: number,
+    decimalOffset: number,
     columnSpacing: number = 4,
     splitPadding: number = 4): string {
 
@@ -25,40 +44,62 @@ function ledgerEntryToString(
     outputString += `${entry.header}\n`;
     for (const subRow of entry.rows) {
         let str = ' '.repeat(splitPadding);
-        switch (subRow.type) {
-            case LedgerRowType.Comment:
-                str += subRow.values[0];
-                break;
-            case LedgerRowType.Split:
-                str += subRow.values[0];
-                str += ' '.repeat(maxAccountWidth - subRow.values[0].length + columnSpacing);
-                str += subRow.values[1];
-                break;
-        }
+        str += ledgerRowToString(
+            subRow,
+            maxAccountWidth,
+            maxAmountWidth,
+            decimalOffset,
+            columnSpacing);
         outputString += `${str}\n`;
     }
     return outputString;
 }
 
-function calculateMaxAccountColumnWidth(ledgerEntries: ILedgerEntry[]): number {
-    return Math.max(...ledgerEntries.reduce((array: number[], entry: ILedgerEntry) => [
-        ...array,
-        ...entry.rows.filter(row => row.type === LedgerRowType.Split)
-                     .filter(row => row.values.length > 0)
-                     .map(row => row.values[0].length),
-    ], []));
+function ledgerRowToString(
+    row: ILedgerRow,
+    maxAccountWidth: number,
+    maxAmountWidth: number,
+    decimalOffset: number,
+    columnSpacing: number): string {
+
+    switch(row.type) {
+        case LedgerRowType.Comment:
+            return row.values[0];
+        case LedgerRowType.Split:
+            const accountName = row.values[0];
+            const formatedAmount = row.values[1];
+            const memo = row.values[2] ? row.values[2] : '';
+
+            const decimalIndex = formatedAmount.indexOf('.');
+            const decimalLocation = decimalIndex >= 0 ? decimalIndex : formatedAmount.length;
+            const amountOffset = decimalOffset - decimalLocation;
+
+            const accountSpacing = ' '.repeat(maxAccountWidth - accountName.length + columnSpacing + amountOffset);
+            const amountSpacing = ' '.repeat(maxAmountWidth - amountOffset - formatedAmount.length + columnSpacing);
+
+            return `${accountName}${accountSpacing}${formatedAmount}${amountSpacing}${memo}`;
+    }
+    return '';
 }
 
-export function buildLedgerRowSplits({type, splits, currencySymbol}: IEntry): ILedgerRow[] {
+export function buildLedgerEntryRows({type, splits, currencySymbol}: IEntry): ILedgerRow[] {
     splits = splits.sort(splitSort);
     return splits.map(split => {
+        const amount = Math.abs(split.amount);
+        const sign = Math.sign(split.amount);
+        const amountString = `${sign > 0 ? ' ' : '-'}${currencySymbol}${amount.toFixed(2)}`;
         switch (type) {
             case EntryType.Transaction:
                     return {
                         type: LedgerRowType.Split,
                         values: [
                             `${split.group}:${split.account}`,
-                            `${currencySymbol}${split.amount}`,
+                            amountString,
+                            ...(split.memo
+                                ? [
+                                    `; ${split.memo}`,
+                                ]
+                                : []),
                         ],
                     };
             case EntryType.Budget:
@@ -66,7 +107,12 @@ export function buildLedgerRowSplits({type, splits, currencySymbol}: IEntry): IL
                         type: LedgerRowType.Split,
                         values: [
                             `[${split.group}:${split.account}]`,
-                            `${currencySymbol}${split.amount}`,
+                            amountString,
+                            ...(split.memo
+                                ? [
+                                    `; ${split.memo}`,
+                                ]
+                                : []),
                         ],
                     };
         }
