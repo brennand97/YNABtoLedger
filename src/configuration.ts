@@ -8,7 +8,8 @@ import ynabBuildConfig from './sources/ynab/config';
 import { IConfiguration, IYNABConfiguration } from './types';
 
 const moduleName = 'ynabtoledger';
-const defaultConfigPath = path.join(process.env.HOME, `.${moduleName}rc`);
+const home = process.env.HOME;
+const defaultConfigPath = path.join(home || '.', `.${moduleName}rc`);
 let cfg: IConfiguration;
 let cfgFilepath: string;
 

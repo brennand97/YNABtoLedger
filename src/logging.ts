@@ -13,7 +13,7 @@ export class DedupLogger {
     private dedupMap: any;
     private cleanUpQueue: IDedupKey[];
 
-    constructor(location: string, timeout: number = 300000) {
+    constructor(location: string, timeout: number = 60000) {
         this.location = location;
         this.timeout = timeout;
         this.dedupMap = {};

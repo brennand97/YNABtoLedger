@@ -1,0 +1,3 @@
+interface IYNABOptions {
+    budget: boolean;
+}

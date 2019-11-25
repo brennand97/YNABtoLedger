@@ -38,19 +38,60 @@ export function entrysEqual(a: IEntry, b: IEntry): boolean {
     return true;
 }
 
-export function entrySort(a: IEntry, b: IEntry) {
+export function entrySort(a: IEntry, b: IEntry): number {
     if (a.recordDate === b.recordDate) {
         return a.id > b.id ? 1 : -1;
     }
     return a.recordDate > b.recordDate ? 1 : -1;
 }
 
+export function splitSort(a: ISplit, b: ISplit): number {
+    if (a.amount === b.amount) {
+        return a.account > b.account ? 1 : -1;
+    }
+    return a.amount < b.amount ? 1 : -1;
+};
+
 export function uniqueElements<T>(keyFunc: (T) => any, list: T[]): T[] {
     return Array.from(new Set(list.map(keyFunc))).map(id => list.find(e => keyFunc(e) === id));
 }
 
-export function findbyId(list, id) {
-    return list.find(e => e.id ? e.id === id : false);
+export function reduceToMap<T, K, V>(
+    array: T[],
+    keyRetriever: ((elm: T) => K),
+    valueRetriever: ((elm: T) => V)): Map<K, V> {
+        return array.map((elm: T) => {
+            return {
+                key: keyRetriever(elm),
+                value: valueRetriever(elm),
+            };
+        }).reduce((map: Map<K, V>, {key, value}: {key: K, value: V}) => {
+            map.set(key, value);
+            return map;
+        }, new Map<K, V>());
+}
+
+export function findbyId<T, K>(list: T[], idExtractor: ((elm: T) => K), id: K) {
+    return list.find(elm => {
+        const elmId = idExtractor(elm);
+        return elmId ? elmId === id : false;
+    });
+}
+
+export function calculateMax<T>(
+    entries: T[],
+    filter: ((row: T) => boolean),
+    valueGeter: ((row: T) => number)): number {
+    return Math.max(...entries
+        .filter(filter)
+        .reduce((array: number[], entry: T) => [
+            ...array,
+            valueGeter(entry),
+    ], [0]));
+}
+
+export function flatMap<T>(list: T[][]): T[] {
+    return list.reduce((memo: T[], ts: T[]) => memo.concat(ts), []);
 }
 
 export function hashCode(s) {

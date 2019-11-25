@@ -1,3 +1,5 @@
+import { IOutputEntry } from './outputs/types';
+
 export interface IConfiguration {
     ynab: IYNABConfiguration;
 }
@@ -19,28 +21,21 @@ export interface ISplit {
     group: SplitGroup;
     account: string;
     amount: number;
+    memo: string;
+}
+
+export enum EntryType {
+    Transaction = 'Transaction',
+    Budget = 'Budget',
 }
 
 export interface IEntry {
+    type: EntryType;
     id: number;
     recordDate: string;
-    payee: string;
     memo: string;
-    cleared: boolean;
+    currencySymbol: string;
     splits: ISplit[];
-}
 
-export interface ILedgerEntry {
-    header: string;
-    rows: ILedgerRow[];
-}
-
-export enum LedgerRowType {
-    Comment = 'Comment',
-    Split = 'Split',
-}
-
-export interface ILedgerRow {
-    type: LedgerRowType;
-    values: string[];
+    toOutputEntry(): IOutputEntry;
 }
