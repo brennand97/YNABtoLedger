@@ -24,8 +24,11 @@ import { YNABBudgetEntryBuilder } from './budgetEntryBuilder';
 import { YNABTransactionEntryBuilder } from './transactionEntrybuilder';
 
 const getId = elm => elm.id;
+const defaultOptions: IYNABOptions = {
+    budget: true,
+};
 
-export async function getEntries(): Promise<IEntry[]> {
+export async function getEntries(options: IYNABOptions = defaultOptions): Promise<IEntry[]> {
     const config: IConfiguration = await getConfig();
 
     const api: API = await initializeApi();
@@ -47,6 +50,8 @@ export async function getEntries(): Promise<IEntry[]> {
         (month: MonthDetail) => month.categories.filter(category => category.goal_type && category.budgeted !== 0)
     );
 
+    const totalEntries: IEntry[] = [];
+
     const transactionEntryBuilder = new YNABTransactionEntryBuilder(
         (id: string) => findbyId(transactions, getId, id),
         (id: string) => findbyId(accounts, getId, id),
@@ -54,35 +59,35 @@ export async function getEntries(): Promise<IEntry[]> {
         (id: string) => findbyId(categoryGroups, getId, id)
     );
     const transcationEntries: StandardEntry[] = transactions.map(t => transactionEntryBuilder.buildEntry(t));
+    totalEntries.push(...transcationEntries);
 
-    const budgetEntryBuilder = new YNABBudgetEntryBuilder(
-        (id: string) => findbyId(transactions, getId, id),
-        (id: string) => findbyId(accounts, getId, id),
-        (id: string) => findbyId(categories, getId, id),
-        (id: string) => findbyId(categoryGroups, getId, id),
-        (month: MonthDetail) => goalCategories.get(month)
-    );
-    const budgetEntries: StandardEntry[] = months.map(m => budgetEntryBuilder.buildEntry(m));
-    const automaticBudgetEntries: AutomaticEntry[] = [
-        ...uniqueElements(
-            (category: Category) => {
-                const categoryGroupName: string = findbyId<CategoryGroupWithCategories, string>(
-                    categoryGroups,
-                    getId,
-                    category.category_group_id).name;
-                const categoryName: string = category.name;
-                return `${categoryGroupName}:${categoryName}`;
-            },
-            Array.from(goalCategories.values()).reduce((array: Category[], innerArray: Category[]) =>
-                array.concat(innerArray), [])
-        ).map(category => budgetEntryBuilder.buildAutomaticEntry(category)),
-    ];
+    if (options.budget) {
+        const budgetEntryBuilder = new YNABBudgetEntryBuilder(
+            (id: string) => findbyId(transactions, getId, id),
+            (id: string) => findbyId(accounts, getId, id),
+            (id: string) => findbyId(categories, getId, id),
+            (id: string) => findbyId(categoryGroups, getId, id),
+            (month: MonthDetail) => goalCategories.get(month)
+        );
+        const budgetEntries: StandardEntry[] = months.map(m => budgetEntryBuilder.buildEntry(m));
+        const automaticBudgetEntries: AutomaticEntry[] = [
+            ...uniqueElements(
+                (category: Category) => {
+                    const categoryGroupName: string = findbyId<CategoryGroupWithCategories, string>(
+                        categoryGroups,
+                        getId,
+                        category.category_group_id).name;
+                    const categoryName: string = category.name;
+                    return `${categoryGroupName}:${categoryName}`;
+                },
+                Array.from(goalCategories.values()).reduce((array: Category[], innerArray: Category[]) =>
+                    array.concat(innerArray), [])
+            ).map(category => budgetEntryBuilder.buildAutomaticEntry(category)),
+        ];
+        totalEntries.push(...budgetEntries, ...automaticBudgetEntries);
+    }
 
-    const uniqueEntries: IEntry[] = uniqueElements((e: IEntry) => e.id, [
-        ...transcationEntries,
-        ...budgetEntries,
-        ...automaticBudgetEntries,
-    ]);
+    const uniqueEntries: IEntry[] = uniqueElements((e: IEntry) => e.id, totalEntries);
     return uniqueEntries.sort(entrySort);
 }
 

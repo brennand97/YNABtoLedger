@@ -1,5 +1,6 @@
-import { buildLedgerEntryRows } from '../ledger';
-import { EntryType, IEntry, ILedgerEntry, ISplit, LedgerRowType } from '../types';
+import { buildLedgerEntryRows } from '../outputs/ledger';
+import { IOutputEntry, OutputRowType } from '../outputs/types';
+import { EntryType, IEntry, ISplit } from '../types';
 
 export class AutomaticEntry implements IEntry {
     public type: EntryType;
@@ -15,7 +16,7 @@ export class AutomaticEntry implements IEntry {
         Object.assign(this, data);
     }
 
-    public toLedgerEntry(): ILedgerEntry {
+    public toOutputEntry(): IOutputEntry {
         return {
             // Header format: '= {accountMatcher}'
             header: `= ${this.accountMatcher}`,
@@ -23,7 +24,7 @@ export class AutomaticEntry implements IEntry {
                 // Optional comment row: '; {memo}'
                 ...(this.memo
                     ? [{
-                        type: LedgerRowType.Comment,
+                        type: OutputRowType.Comment,
                         values: [`; ${this.memo}`],
                     }]
                     : []),

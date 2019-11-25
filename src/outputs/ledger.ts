@@ -1,24 +1,25 @@
-import { StandardEntry } from './entries/StandardEntry';
-import { EntryType, IEntry, ILedgerEntry, ILedgerRow, ISplit, LedgerRowType } from './types';
-import { entrySort, splitSort, calculateMax, flatMap } from './utils';
+import { StandardEntry } from '../entries/StandardEntry';
+import { EntryType, IEntry, ISplit } from '../types';
+import { calculateMax, entrySort, flatMap, splitSort } from '../utils';
+import { IOutputEntry, IOutputRow, OutputRowType } from './types';
 
 export async function compile(entries: IEntry[]): Promise<string> {
     // Sort to make sure there is a deterministic output
     entries = entries.sort(entrySort);
 
-    const ledgerEntries = entries.map(e => e.toLedgerEntry());
+    const ledgerEntries = entries.map(e => e.toOutputEntry());
     const ledgerRows = flatMap(ledgerEntries.map(e => e.rows));
     const maxAccountWidth = calculateMax(
         ledgerRows,
-        row => row.type === LedgerRowType.Split && row.values.length > 0,
+        row => row.type === OutputRowType.Split && row.values.length > 0,
         row => row.values[0].length);
     const maxAmountWidth = calculateMax(
         ledgerRows,
-        row => row.type === LedgerRowType.Split && row.values.length > 1,
+        row => row.type === OutputRowType.Split && row.values.length > 1,
         row => row.values[1].length);
     const amountDecimalOffset = calculateMax(
         ledgerRows,
-        row => row.type === LedgerRowType.Split && row.values.length > 1 && row.values[1].includes('.'),
+        row => row.type === OutputRowType.Split && row.values.length > 1 && row.values[1].includes('.'),
         row => row.values[1].indexOf('.'));
     const finalString = ledgerEntries
         .map(entry => ledgerEntryToString(
@@ -33,7 +34,7 @@ export async function compile(entries: IEntry[]): Promise<string> {
 }
 
 function ledgerEntryToString(
-    entry: ILedgerEntry,
+    entry: IOutputEntry,
     maxAccountWidth: number,
     maxAmountWidth: number,
     decimalOffset: number,
@@ -56,16 +57,16 @@ function ledgerEntryToString(
 }
 
 function ledgerRowToString(
-    row: ILedgerRow,
+    row: IOutputRow,
     maxAccountWidth: number,
     maxAmountWidth: number,
     decimalOffset: number,
     columnSpacing: number): string {
 
-    switch(row.type) {
-        case LedgerRowType.Comment:
+    switch (row.type) {
+        case OutputRowType.Comment:
             return row.values[0];
-        case LedgerRowType.Split:
+        case OutputRowType.Split:
             const accountName = row.values[0];
             const formatedAmount = row.values[1];
             const memo = row.values[2] ? row.values[2] : '';
@@ -82,7 +83,7 @@ function ledgerRowToString(
     return '';
 }
 
-export function buildLedgerEntryRows({type, splits, currencySymbol}: IEntry): ILedgerRow[] {
+export function buildLedgerEntryRows({type, splits, currencySymbol}: IEntry): IOutputRow[] {
     splits = splits.sort(splitSort);
     return splits.map(split => {
         const amount = Math.abs(split.amount);
@@ -91,7 +92,7 @@ export function buildLedgerEntryRows({type, splits, currencySymbol}: IEntry): IL
         switch (type) {
             case EntryType.Transaction:
                     return {
-                        type: LedgerRowType.Split,
+                        type: OutputRowType.Split,
                         values: [
                             `${split.group}:${split.account}`,
                             amountString,
@@ -104,7 +105,7 @@ export function buildLedgerEntryRows({type, splits, currencySymbol}: IEntry): IL
                     };
             case EntryType.Budget:
                     return {
-                        type: LedgerRowType.Split,
+                        type: OutputRowType.Split,
                         values: [
                             `[${split.group}:${split.account}]`,
                             amountString,

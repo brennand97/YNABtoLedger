@@ -1,3 +1,5 @@
+import { IOutputEntry } from './outputs/types';
+
 export interface IConfiguration {
     ynab: IYNABConfiguration;
 }
@@ -35,20 +37,5 @@ export interface IEntry {
     currencySymbol: string;
     splits: ISplit[];
 
-    toLedgerEntry(): ILedgerEntry;
-}
-
-export interface ILedgerEntry {
-    header: string;
-    rows: ILedgerRow[];
-}
-
-export enum LedgerRowType {
-    Comment = 'Comment',
-    Split = 'Split',
-}
-
-export interface ILedgerRow {
-    type: LedgerRowType;
-    values: string[];
+    toOutputEntry(): IOutputEntry;
 }

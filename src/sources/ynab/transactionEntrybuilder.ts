@@ -1,7 +1,7 @@
 import { Account, Category, CategoryGroupWithCategories, MonthDetail, SubTransaction, TransactionDetail, utils } from 'ynab';
 import { StandardEntry } from '../../entries/StandardEntry';
-import { EntryType, IEntry, SplitGroup } from '../../types';
-import { hashCode, normalizeAccountName, splitSort, validateAccountName } from '../../utils';
+import { EntryType, SplitGroup } from '../../types';
+import { hashCode, splitSort } from '../../utils';
 import { YNABEntryBuilder } from './entryBuilder';
 
 export class YNABTransactionEntryBuilder extends YNABEntryBuilder {

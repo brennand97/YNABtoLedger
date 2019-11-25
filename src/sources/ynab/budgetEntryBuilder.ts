@@ -2,7 +2,7 @@ import moment = require('moment');
 import { Account, Category, CategoryGroupWithCategories, MonthDetail, TransactionDetail } from 'ynab';
 import { AutomaticEntry } from '../../entries/AutomaticEntry';
 import { StandardEntry } from '../../entries/StandardEntry';
-import { EntryType, IEntry, SplitGroup } from '../../types';
+import { EntryType, SplitGroup } from '../../types';
 import { hashCode, splitSort } from '../../utils';
 import { YNABEntryBuilder } from './entryBuilder';
 
