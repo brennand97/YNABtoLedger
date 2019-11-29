@@ -1,4 +1,4 @@
-import { IOutputEntry } from './outputs/types';
+import { IOutputEntry, OutputType } from './outputs/types';
 
 export interface IConfiguration {
     ynab: IYNABConfiguration;
@@ -37,5 +37,5 @@ export interface IEntry {
     currencySymbol: string;
     splits: ISplit[];
 
-    toOutputEntry(): IOutputEntry;
+    toOutputEntry(type: OutputType): IOutputEntry;
 }

@@ -12,3 +12,8 @@ export interface IOutputRow {
     type: OutputRowType;
     values: string[];
 }
+
+export enum OutputType {
+    Ledger = 'ledger-cli',
+    Beancount = 'beancount',
+}

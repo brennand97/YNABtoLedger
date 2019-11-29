@@ -50,7 +50,7 @@ export function splitSort(a: ISplit, b: ISplit): number {
         return a.account > b.account ? 1 : -1;
     }
     return a.amount < b.amount ? 1 : -1;
-};
+}
 
 export function uniqueElements<T>(keyFunc: (T) => any, list: T[]): T[] {
     return Array.from(new Set(list.map(keyFunc))).map(id => list.find(e => keyFunc(e) === id));
