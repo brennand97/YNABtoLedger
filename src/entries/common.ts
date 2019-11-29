@@ -4,7 +4,7 @@ import { splitSort } from '../utils';
 
 export function buildLedgerEntryRows({type, splits, currencySymbol}: IEntry, outputType: OutputType): IOutputRow[] {
     splits = splits.sort(splitSort);
-    switch(outputType) {
+    switch (outputType) {
         case OutputType.Ledger:
             return splits.map(split => {
                 const amount = Math.abs(split.amount);
