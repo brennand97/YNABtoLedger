@@ -6,7 +6,7 @@ export async function compile(entries: IEntry[]): Promise<string> {
     // Sort to make sure there is a deterministic output
     entries = entries.sort(entrySort);
 
-    const ledgerEntries = entries.map(e => e.toOutputEntry(OutputType.Ledger));
+    const ledgerEntries = entries.map(e => e.toOutputEntry(OutputType.Beancount));
     const ledgerRows = flatMap(ledgerEntries.map(e => e.rows));
     const maxAccountWidth = calculateMax(
         ledgerRows,
