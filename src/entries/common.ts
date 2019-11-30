@@ -50,7 +50,7 @@ export function buildLedgerEntryRows({type, splits, currencySymbol}: IEntry, out
                         return {
                             type: OutputRowType.Split,
                             values: [
-                                `${split.group}:${split.account}`.replace(/ +/g, '-'),
+                                `${split.group}:${split.account}`.replace(/ +/g, '-').replace(/(\.|')/g, ''),
                                 amountString,
                                 ...(split.memo
                                     ? [

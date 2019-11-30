@@ -7,7 +7,7 @@ export function filterEntries(config: IConfiguration, entries: IEntry[]): IEntry
 
     if (config.account_filter && config.account_filter.length > 0) {
 
-        const regexFilter: RegExp[] = config.account_filter.map(filter => new RegExp(filter, 'gm'));
+        const regexFilter: RegExp[] = config.account_filter.map(filter => new RegExp(filter, 'g'));
 
         entries = entries.filter(entry => {
             const accountNames =  entry.splits

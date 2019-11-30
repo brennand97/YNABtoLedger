@@ -38,7 +38,7 @@ export class StandardEntry implements IEntry {
                     };
             case OutputType.Beancount:
                     const payee: string = this.payee ? `"${this.payee}"` : '';
-                    const memo: string = this.memo ? `"${this.memo.replace(/( +#[a-z0-9-_]+)*$/gi, '')}"` : '';
+                    const memo: string = this.memo ? `"${this.memo.replace(/( +#[a-z0-9-_]+)*$/gi, '').replace(/"+/g, "'")}"` : '';
                     const tags: string[] = this.memo ? this.memo.match(/(#[a-z0-9-_]+)/gi) : [];
                     return {
                         // Header format: '{record date} {* | !} "{payee}" "{memo}" {tags}'

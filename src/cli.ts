@@ -8,6 +8,7 @@ import * as ledger from './outputs/ledger';
 import * as ynab from './sources/ynab/index';
 import { transform } from './transformation/index';
 import { IConfiguration, IEntry } from './types';
+import { flatMap } from './utils';
 
 async function readCli(): Promise<meow.Result> {
     const cli: meow.Result = meow(`
@@ -15,6 +16,7 @@ async function readCli(): Promise<meow.Result> {
         $ ynab-to-ledger
 
         Options
+        --acounts                Output only the account list
         --beancount              Output in beancount style
         --budget (-b)            Include the budget entries for ledger
         --config (-c)            Config file to be used
@@ -27,6 +29,10 @@ async function readCli(): Promise<meow.Result> {
         $ ynab-to-ledger --config config/.ynabtoledgerrc
     `, {
         flags: {
+            accounts: {
+                default: false,
+                type: 'boolean',
+            },
             beancount: {
                 default: false,
                 type: 'boolean',
@@ -102,9 +108,20 @@ async function readCli(): Promise<meow.Result> {
 
     const transformedEntries: IEntry[] = await transform(ynabEntries);
 
-    const output: string = cli.flags.beancount
+    if (cli.flags.accounts) {
+        const accounts: string[] = Array.from(flatMap(transformedEntries
+            .map(entry => entry.splits
+                .map(split => `${split.group}:${split.account}`)))
+            .reduce((set: Set<string>, accountName: string) => set.add(accountName), new Set()))
+            .sort();
+
+        console.log(accounts.join('\n'));
+    } else {
+        const output: string = cli.flags.beancount
         ? await beancount.compile(transformedEntries)
         : await ledger.compile(transformedEntries);
 
-    console.log(output);
+        console.log(output);
+    }
+
 })();
