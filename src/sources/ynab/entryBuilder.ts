@@ -40,9 +40,9 @@ export class YNABEntryBuilder {
             case Account.TypeEnum.LineOfCredit:
             case Account.TypeEnum.Mortgage:
             case Account.TypeEnum.OtherLiability:
-                return SplitGroup.Liability;
+                return SplitGroup.Liabilities;
             default:
-                return SplitGroup.Asset;
+                return SplitGroup.Assets;
         }
     }
 
