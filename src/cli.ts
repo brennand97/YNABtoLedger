@@ -23,7 +23,7 @@ async function readCli(): Promise<meow.Result> {
 
         Examples
         $ ynab-to-ledger --filter '^Expenses.*'
-        $ ynab-to-ledger --config config/.ynabtoledgersrc
+        $ ynab-to-ledger --config config/.ynabtoledgerrc
     `, {
         flags: {
             beancount: {
