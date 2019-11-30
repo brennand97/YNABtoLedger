@@ -7,7 +7,6 @@
     "@types/cosmiconfig": "^5.0.3",
     "@types/node": "^12.7.4",
     "@types/prompts": "^2.0.1",
-    "columnify": "^1.5.4",
     "cosmiconfig": "^5.2.1",
     "dotenv": "^8.1.0",
     "meow": "^5.0.0",
