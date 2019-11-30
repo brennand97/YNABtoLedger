@@ -6,8 +6,8 @@ import { mapAccounts } from './accountMapping';
 export async function transform(entries: IEntry[]) {
     const config: IConfiguration = await getConfig();
 
-    entries = filterByAccount(config, entries);
     entries = mapAccounts(config, entries);
+    entries = filterByAccount(config, entries);
 
     return entries;
 }

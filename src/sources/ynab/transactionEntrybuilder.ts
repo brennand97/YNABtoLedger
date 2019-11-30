@@ -40,6 +40,7 @@ export class YNABTransactionEntryBuilder extends YNABEntryBuilder {
             currencySymbol: '$',
             id: hashCode(transaction.id),
             memo: transaction.memo,
+            metadata: {ynab_id: transaction.id},
             payee: transaction.payee_name,
             recordDate: transaction.date,
             splits: [],

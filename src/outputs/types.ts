@@ -4,7 +4,7 @@ export interface IOutputEntry {
 }
 
 export enum OutputRowType {
-    Comment = 'Comment',
+    FlatRow = 'FlatRow',
     Split = 'Split',
 }
 

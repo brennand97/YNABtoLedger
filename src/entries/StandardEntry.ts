@@ -9,6 +9,7 @@ export class StandardEntry implements IEntry {
     public memo: string;
     public currencySymbol: string;
     public splits: ISplit[];
+    public metadata: {[key: string]: string};
 
     public payee: string;
     public cleared: boolean;
@@ -27,7 +28,7 @@ export class StandardEntry implements IEntry {
                             // Optional comment row: '; {memo}'
                             ...(this.memo
                                 ? [{
-                                    type: OutputRowType.Comment,
+                                    type: OutputRowType.FlatRow,
                                     values: [`; ${this.memo}`],
                                 }]
                                 : []),
@@ -44,7 +45,18 @@ export class StandardEntry implements IEntry {
                         header: `${this.recordDate} ${this.cleared ? '*' : '!'} ${payee} ${memo} ${tags ? tags.join(' ') : ''}`
                             .replace(/  +/g, ' '),
                         // Example split row: '{account group}:{account name} ${amount}'
-                        rows: buildLedgerEntryRows(this, type),
+                        rows: [
+                            // Optional metadata rows: '{key}: {value}'
+                            ...(this.metadata
+                                ? Object.entries(this.metadata).map(([key, value]) => {
+                                    return {
+                                        type: OutputRowType.FlatRow,
+                                        values: [`${key}: ${value}`],
+                                    }
+                                })
+                                : []),
+                            ...buildLedgerEntryRows(this, type),
+                        ]
                     };
             default:
                 throw Error(`Cannot compile StandardEntry to '${type}'`);

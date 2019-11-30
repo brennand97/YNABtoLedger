@@ -9,6 +9,7 @@ export class AutomaticEntry implements IEntry {
     public memo: string;
     public currencySymbol: string = '';
     public splits: ISplit[];
+    public metadata: {[key: string]: string};
 
     public accountMatcher: string;
 
@@ -26,7 +27,7 @@ export class AutomaticEntry implements IEntry {
                         // Optional comment row: '; {memo}'
                         ...(this.memo
                             ? [{
-                                type: OutputRowType.Comment,
+                                type: OutputRowType.FlatRow,
                                 values: [`; ${this.memo}`],
                             }]
                             : []),

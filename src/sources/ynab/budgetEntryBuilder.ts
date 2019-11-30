@@ -84,6 +84,7 @@ export class YNABBudgetEntryBuilder extends YNABEntryBuilder {
             currencySymbol: '$',
             id: hashCode(month.month),
             memo: month.note ? month.note : null,
+            metadata: {},
             payee: 'Budget',
             recordDate: month.month,
             splits: [],

@@ -38,6 +38,7 @@ export interface IEntry {
     memo: string;
     currencySymbol: string;
     splits: ISplit[];
+    metadata: {[key: string]: string};
 
     toOutputEntry(type: OutputType): IOutputEntry;
 }

@@ -11,6 +11,7 @@ const moduleName = 'ynabtoledger';
 const home = process.env.HOME;
 const defaultConfigPath = path.join(home || '.', `.${moduleName}rc`);
 let cfg: IConfiguration;
+let instanceCfg: Partial<IConfiguration> = {};
 let cfgFilepath: string;
 
 async function initializeConfiguration() {
@@ -78,9 +79,16 @@ async function saveConfig(config: cosmiconfig.Config, filepath: string) {
     }
 }
 
+export function setInstanceConfig(config: Partial<IConfiguration>): void {
+    instanceCfg = config;
+}
+
 export async function getConfig(): Promise<IConfiguration> {
     if (!cfg) {
         await initializeConfiguration();
     }
-    return cfg;
+    return {
+        ...cfg,
+        ...instanceCfg,
+    };
 }

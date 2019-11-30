@@ -63,7 +63,7 @@ function ledgerRowToString(
     columnSpacing: number): string {
 
     switch (row.type) {
-        case OutputRowType.Comment:
+        case OutputRowType.FlatRow:
             return row.values[0];
         case OutputRowType.Split:
             const accountName = row.values[0];
