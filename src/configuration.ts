@@ -55,6 +55,7 @@ async function buildConfig(filepath: string = defaultConfigPath)
     }
 
     const config: IConfiguration = {
+        account_name_map: [],
         ynab: ynabConfig,
     };
 

@@ -36,7 +36,7 @@ export class YNABBudgetEntryBuilder extends YNABEntryBuilder {
                     amount: this.convertAmount(
                         goalCategories.reduce((sum: number, category: Category) => sum - category.budgeted, 0)
                     ),
-                    group: SplitGroup.Liability,
+                    group: SplitGroup.Liabilities,
                     memo: null,
                 },
                 ...goalCategories.map(category => {
@@ -44,7 +44,7 @@ export class YNABBudgetEntryBuilder extends YNABEntryBuilder {
                         return {
                             account: `Budget:${this.validateAndNormalizeAccountName(`${categoryGroup.name}:${category.name}`)}`,
                             amount: this.convertAmount(category.budgeted),
-                            group: SplitGroup.Asset,
+                            group: SplitGroup.Assets,
                             memo: null,
                         };
                     }),
@@ -55,7 +55,7 @@ export class YNABBudgetEntryBuilder extends YNABEntryBuilder {
     public buildAutomaticEntry(category: Category): AutomaticEntry {
         const categoryGroup: CategoryGroupWithCategories = this.getCategoryGroup(category);
         const accountName: string = `${this.validateAndNormalizeAccountName(`${categoryGroup.name}:${category.name}`)}`;
-        const accountMatcher = `/${SplitGroup.Expense}:${accountName}/`;
+        const accountMatcher = `/${SplitGroup.Expenses}:${accountName}/`;
         return new AutomaticEntry({
             accountMatcher,
             id: hashCode(accountMatcher),
@@ -64,13 +64,13 @@ export class YNABBudgetEntryBuilder extends YNABEntryBuilder {
                 {
                     account: 'Budget',
                     amount: 1.0,
-                    group: SplitGroup.Liability,
+                    group: SplitGroup.Liabilities,
                     memo: null,
                 },
                 {
                     account: `Budget:${accountName}`,
                     amount: -1.0,
-                    group: SplitGroup.Asset,
+                    group: SplitGroup.Assets,
                     memo: null,
                 },
             ].sort(splitSort),

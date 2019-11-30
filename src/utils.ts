@@ -94,6 +94,10 @@ export function flatMap<T>(list: T[][]): T[] {
     return list.reduce((memo: T[], ts: T[]) => memo.concat(ts), []);
 }
 
+export function identity<T>(arg: T): T {
+    return arg;
+}
+
 export function hashCode(s) {
     let h = 0;
     let i = 0;

@@ -141,7 +141,7 @@ export class YNABTransactionEntryBuilder extends YNABEntryBuilder {
                     return SplitGroup.Income;
                 }
             default:
-                return SplitGroup.Expense;
+                return SplitGroup.Expenses;
         }
     }
 
@@ -155,7 +155,7 @@ export class YNABTransactionEntryBuilder extends YNABEntryBuilder {
                     return `${transaction.payee_name}`;
                 case SplitGroup.Equity:
                     return 'Starting Balance';
-                case SplitGroup.Expense:
+                case SplitGroup.Expenses:
                     return `${categoryGroup.name}:${category.name}`;
             }
         })();

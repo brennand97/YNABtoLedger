@@ -57,7 +57,7 @@ export function buildLedgerEntryRows({type, splits, currencySymbol}: IEntry, out
                                         `; ${split.memo}`,
                                     ]
                                     : []),
-                            ]
+                            ],
                         };
                     default:
                             throw Error(`Cannot compile '${type}' to row for '${outputType}'`);

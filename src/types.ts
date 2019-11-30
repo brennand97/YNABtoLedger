@@ -2,6 +2,7 @@ import { IOutputEntry, OutputType } from './outputs/types';
 
 export interface IConfiguration {
     ynab: IYNABConfiguration;
+    account_name_map: Array<{ search: string, replace: string }>;
 }
 
 export interface IYNABConfiguration {
@@ -10,11 +11,11 @@ export interface IYNABConfiguration {
 }
 
 export enum SplitGroup {
-    Asset = 'Assets',
+    Assets = 'Assets',
     Equity = 'Equity',
-    Expense = 'Expenses',
+    Expenses = 'Expenses',
     Income = 'Income',
-    Liability = 'Liabilities',
+    Liabilities = 'Liabilities',
 }
 
 export interface ISplit {
