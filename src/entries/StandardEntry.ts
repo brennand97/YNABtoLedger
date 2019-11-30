@@ -46,12 +46,12 @@ export class StandardEntry implements IEntry {
                             .replace(/  +/g, ' '),
                         // Example split row: '{account group}:{account name} ${amount}'
                         rows: [
-                            // Optional metadata rows: '{key}: {value}'
+                            // Optional metadata rows: '{key}: "{value}""'
                             ...(this.metadata
                                 ? Object.entries(this.metadata).map(([key, value]) => {
                                     return {
                                         type: OutputRowType.FlatRow,
-                                        values: [`${key}: ${value}`],
+                                        values: [`${key}: "${value}"`],
                                     }
                                 })
                                 : []),
