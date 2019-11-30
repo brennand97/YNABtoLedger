@@ -6,7 +6,6 @@ import * as ledger from './outputs/ledger';
 import * as ynab from './sources/ynab/index';
 import { transform } from './transformation/index';
 import { IEntry } from './types';
-import { flatMap } from './utils';
 
 (async () => {
     const logger: DedupLogger = new DedupLogger('CLI');

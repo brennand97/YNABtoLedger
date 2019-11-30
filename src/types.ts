@@ -3,6 +3,7 @@ import { IOutputEntry, OutputType } from './outputs/types';
 export interface IConfiguration {
     ynab: IYNABConfiguration;
     account_name_map: Array<{ search: string, replace: string }>;
+    account_filter: string[];
 }
 
 export interface IYNABConfiguration {
