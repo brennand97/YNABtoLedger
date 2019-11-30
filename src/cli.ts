@@ -15,11 +15,12 @@ async function readCli(): Promise<meow.Result> {
         $ ynab-to-ledger
 
         Options
-        --filter (-f) <regex>    Filter by accounts
-        --override (-o)          Override configuration file by flags
         --beancount              Output in beancount style
         --budget (-b)            Include the budget entries for ledger
         --config (-c)            Config file to be used
+        --filter (-f) <regex>    Filter by accounts
+        --override (-o)          Override configuration file by flags
+        --start-date (-s)        Date to start transactions from
 
         Examples
         $ ynab-to-ledger --filter '^Expenses.*'
@@ -48,6 +49,10 @@ async function readCli(): Promise<meow.Result> {
                 default: false,
                 tyep: 'boolean',
             },
+            startDate: {
+                alias: 's',
+                type: 'string',
+            },
         },
     });
 
@@ -74,6 +79,14 @@ async function readCli(): Promise<meow.Result> {
             };
         }
     }
+
+    if (cli.flags.startDate) {
+        instanceConfig = {
+            ...instanceConfig,
+            start_date: cli.flags.startDate,
+        }
+    }
+
     setInstanceConfig(instanceConfig);
 
     return cli;

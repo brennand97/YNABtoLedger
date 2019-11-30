@@ -6,6 +6,7 @@ import util from 'util';
 
 import ynabBuildConfig from './sources/ynab/config';
 import { IConfiguration, IYNABConfiguration } from './types';
+import moment from 'moment';
 
 const moduleName = 'ynabtoledger';
 const home = process.env.HOME;

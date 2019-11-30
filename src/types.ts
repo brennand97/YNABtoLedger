@@ -4,6 +4,7 @@ export interface IConfiguration {
     ynab: IYNABConfiguration;
     account_name_map: Array<{ search: string, replace: string }>;
     account_filter: string[];
+    start_date?: string;
 }
 
 export interface IYNABConfiguration {
