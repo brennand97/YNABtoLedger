@@ -14,16 +14,21 @@ let cfg: IConfiguration;
 let instanceCfg: Partial<IConfiguration> = {};
 let cfgFilepath: string;
 
-async function initializeConfiguration() {
-    const result = await loadOrBuildConfig();
+export async function initializeConfiguration(configFilepath?: string) {
+    const result = await loadOrBuildConfig(configFilepath);
     cfg = (result.cfg as IConfiguration);
     cfgFilepath = result.cfgFilepath;
 }
 
-async function loadOrBuildConfig(): Promise<{cfg: cosmiconfig.Config, cfgFilepath: string }> {
+async function loadOrBuildConfig(configFilepath?: string): Promise<{cfg: cosmiconfig.Config, cfgFilepath: string }> {
     const explorer = cosmiconfig(moduleName);
     try {
-        const searchResult = await explorer.search();
+        let searchResult;
+        if (configFilepath) {
+            searchResult = await explorer.load(configFilepath);
+        } else {
+            searchResult = await explorer.search();
+        }
         if (!searchResult) {
             return buildConfig();
         } else if (!searchResult.config) {
@@ -35,7 +40,7 @@ async function loadOrBuildConfig(): Promise<{cfg: cosmiconfig.Config, cfgFilepat
             };
         }
     } catch (e) {
-        console.error('Exeception when searching for configuration', e);
+        console.error('Error when searching for configuration', e);
     }
 }
 

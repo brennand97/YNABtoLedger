@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import meow = require('meow');
-import { getConfig, setInstanceConfig } from './configuration';
+import { getConfig, initializeConfiguration, setInstanceConfig } from './configuration';
 import { DedupLogger } from './logging';
 import * as beancount from './outputs/beancount';
 import * as ledger from './outputs/ledger';
@@ -19,9 +19,11 @@ async function readCli(): Promise<meow.Result> {
         --override (-o)          Override configuration file by flags
         --beancount              Output in beancount style
         --budget (-b)            Include the budget entries for ledger
+        --config (-c)            Config file to be used
 
         Examples
         $ ynab-to-ledger --filter '^Expenses.*'
+        $ ynab-to-ledger --config config/.ynabtoledgersrc
     `, {
         flags: {
             beancount: {
@@ -32,6 +34,10 @@ async function readCli(): Promise<meow.Result> {
                 alias: 'b',
                 default: false,
                 type: 'boolean',
+            },
+            config: {
+                alias: 'c',
+                type: 'string',
             },
             filter: {
                 alias: 'f',
@@ -45,8 +51,11 @@ async function readCli(): Promise<meow.Result> {
         },
     });
 
+    await initializeConfiguration(cli.flags.config);
     const config: IConfiguration = await getConfig();
+
     let instanceConfig: Partial<IConfiguration> = {};
+
     if (cli.flags.filter) {
         if (cli.flags.override) {
             instanceConfig = {
