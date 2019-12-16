@@ -19,7 +19,7 @@ retrieveYNAB() {
     git add $FILE
     git commit -m "YNAB to ledger compilation at $datetime"
 
-    ynab-to-ledger --beancount --budget > $FILE_BEANCOUNT
+    ynab-to-ledger --beancount > $FILE_BEANCOUNT
     if [ $? -ne 0 ]; then
         >&2 echo "Failed to run 'ynab-to-ledger' for beancount"
     fi
