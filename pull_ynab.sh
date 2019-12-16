@@ -10,7 +10,7 @@ GIT_PUSH=true
 retrieveYNAB() {
 
     datetime=$(date +"%Y-%m-%d %T")
-    ynab-to-ledger > $FILE
+    ynab-to-ledger --budget > $FILE
     if [ $? -ne 0 ]; then
         >&2 echo "Failed to run 'ynab-to-ledger'"
     fi
