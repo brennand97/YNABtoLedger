@@ -64,6 +64,7 @@ async function buildConfig(filepath: string = defaultConfigPath)
     const config: IConfiguration = {
         account_filter: ['.*'],
         account_name_map: [],
+        beancount_tags: true,
         ynab: ynabConfig,
     };
 

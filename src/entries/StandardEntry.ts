@@ -1,5 +1,5 @@
 import { IOutputEntry, OutputRowType, OutputType } from '../outputs/types';
-import { EntryType, IEntry, ISplit } from '../types';
+import { EntryType, IConfiguration, IEntry, ISplit } from '../types';
 import { buildLedgerEntryRows } from './common';
 
 export class StandardEntry implements IEntry {
@@ -18,7 +18,7 @@ export class StandardEntry implements IEntry {
         Object.assign(this, data);
     }
 
-    public toOutputEntry(type: OutputType): IOutputEntry {
+    public toOutputEntry(type: OutputType, config: IConfiguration = null): IOutputEntry {
         switch (type) {
             case OutputType.Ledger:
                     return {
@@ -38,8 +38,28 @@ export class StandardEntry implements IEntry {
                     };
             case OutputType.Beancount:
                     const payee: string = this.payee ? `"${this.payee}"` : '';
-                    const memo: string = this.memo ? `"${this.memo.replace(/( +#[a-z0-9-_]+)*$/gi, '').replace(/"+/g, "'")}"` : '';
-                    const tags: string[] = this.memo ? this.memo.match(/(#[a-z0-9-_]+)/gi) : [];
+                    const memo: string = this.memo
+                        ? `"${this.memo
+                                .replace(/( +[#^][a-z0-9-_]+)*$/gi, '') // handle trailing tags
+                                .replace(/"+/g, "'")}"` // handle double quotes
+                        : '';
+
+                    let tags: string[] = [];
+                    if (config !== null && config.beancount_tags) {
+                        if (this.metadata.hasOwnProperty('ynab_id')) {
+                            tags.push(`^ynab_${this.metadata.ynab_id}`);
+                        }
+                    }
+                    if (this.memo) {
+                        const matches: string[] = this.memo.match(/([#^][a-z0-9-_]+)/gi);
+                        if (matches) {
+                            tags = [
+                                ...tags,
+                                ...matches,
+                            ];
+                        }
+                    }
+
                     return {
                         // Header format: '{record date} {* | !} "{payee}" "{memo}" {tags}'
                         header: `${this.recordDate} ${this.cleared ? '*' : '!'} ${payee} ${memo} ${tags ? tags.join(' ') : ''}`
@@ -52,11 +72,11 @@ export class StandardEntry implements IEntry {
                                     return {
                                         type: OutputRowType.FlatRow,
                                         values: [`${key}: "${value}"`],
-                                    }
+                                    };
                                 })
                                 : []),
                             ...buildLedgerEntryRows(this, type),
-                        ]
+                        ],
                     };
             default:
                 throw Error(`Cannot compile StandardEntry to '${type}'`);

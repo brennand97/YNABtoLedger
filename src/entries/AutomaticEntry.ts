@@ -1,5 +1,5 @@
 import { IOutputEntry, OutputRowType, OutputType } from '../outputs/types';
-import { EntryType, IEntry, ISplit } from '../types';
+import { EntryType, IConfiguration, IEntry, ISplit } from '../types';
 import { buildLedgerEntryRows } from './common';
 
 export class AutomaticEntry implements IEntry {
@@ -17,7 +17,7 @@ export class AutomaticEntry implements IEntry {
         Object.assign(this, data);
     }
 
-    public toOutputEntry(type: OutputType): IOutputEntry {
+    public toOutputEntry(type: OutputType, config: IConfiguration = null): IOutputEntry {
         switch (type) {
             case OutputType.Ledger:
                 return {

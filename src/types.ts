@@ -5,6 +5,7 @@ export interface IConfiguration {
     account_name_map: Array<{ search: string, replace: string }>;
     account_filter: string[];
     start_date?: string;
+    beancount_tags: boolean;
 }
 
 export interface IYNABConfiguration {
@@ -41,5 +42,5 @@ export interface IEntry {
     splits: ISplit[];
     metadata: {[key: string]: string};
 
-    toOutputEntry(type: OutputType): IOutputEntry;
+    toOutputEntry(type: OutputType, config?: IConfiguration): IOutputEntry;
 }

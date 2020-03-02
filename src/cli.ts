@@ -18,6 +18,7 @@ async function readCli(): Promise<meow.Result> {
         Options
         --acounts                Output only the account list
         --beancount              Output in beancount style
+        --beancount-tags         For beancount: add a entry id as tag
         --budget (-b)            Include the budget entries for ledger
         --config (-c)            Config file to be used
         --filter (-f) <regex>    Filter by accounts
@@ -34,6 +35,10 @@ async function readCli(): Promise<meow.Result> {
                 type: 'boolean',
             },
             beancount: {
+                default: false,
+                type: 'boolean',
+            },
+            beancountTags: {
                 default: false,
                 type: 'boolean',
             },
@@ -90,7 +95,14 @@ async function readCli(): Promise<meow.Result> {
         instanceConfig = {
             ...instanceConfig,
             start_date: cli.flags.startDate,
-        }
+        };
+    }
+
+    if (cli.flags.override && cli.flags.beancountTags) {
+        instanceConfig = {
+            ...instanceConfig,
+            beancount_tags: cli.flags.beancountTags,
+        };
     }
 
     setInstanceConfig(instanceConfig);

@@ -1,12 +1,15 @@
-import { IEntry } from '../types';
-import { calculateMax, entrySort, flatMap, splitSort } from '../utils';
+import { getConfig } from '../configuration';
+import { IConfiguration, IEntry } from '../types';
+import { calculateMax, entrySort, flatMap } from '../utils';
 import { IOutputEntry, IOutputRow, OutputRowType, OutputType } from './types';
 
 export async function compile(entries: IEntry[]): Promise<string> {
+    const config: IConfiguration = await getConfig();
+
     // Sort to make sure there is a deterministic output
     entries = entries.sort(entrySort);
 
-    const ledgerEntries = entries.map(e => e.toOutputEntry(OutputType.Beancount));
+    const ledgerEntries = entries.map(e => e.toOutputEntry(OutputType.Beancount, config));
     const ledgerRows = flatMap(ledgerEntries.map(e => e.rows));
     const maxAccountWidth = calculateMax(
         ledgerRows,
