@@ -71,8 +71,15 @@ export function reduceToMap<T, K, V>(
         }, new Map<K, V>());
 }
 
-export function findbyId<T, K>(list: T[], idExtractor: ((elm: T) => K), id: K) {
+export function findbyId<T, K>(list: T[], idExtractor: ((elm: T) => K), id: K): T {
     return list.find(elm => {
+        const elmId = idExtractor(elm);
+        return elmId ? elmId === id : false;
+    });
+}
+
+export function findAllById<T, K>(list: T[], idExtractor: ((elm: T) => K), id: K): T[] {
+    return list.filter(elm => {
         const elmId = idExtractor(elm);
         return elmId ? elmId === id : false;
     });

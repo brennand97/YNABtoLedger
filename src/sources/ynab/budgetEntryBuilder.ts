@@ -1,5 +1,5 @@
 import moment = require('moment');
-import { Account, Category, CategoryGroupWithCategories, MonthDetail, TransactionDetail } from 'ynab';
+import { Account, Category, CategoryGroup, MonthDetail, TransactionDetail } from 'ynab';
 import { AutomaticEntry } from '../../entries/AutomaticEntry';
 import { StandardEntry } from '../../entries/StandardEntry';
 import { EntryType, SplitGroup } from '../../types';
@@ -13,7 +13,7 @@ export class YNABBudgetEntryBuilder extends YNABEntryBuilder {
         transactionsLookup: ((id: string) => TransactionDetail),
         accountLookup: ((id: string) => Account),
         categoryLookup: ((id: string) => Category),
-        categoryGroupLookup: ((id: string) => CategoryGroupWithCategories),
+        categoryGroupLookup: ((id: string) => CategoryGroup),
         goalCategories: ((month: MonthDetail) => Category[])
     ) {
         super(
@@ -40,7 +40,7 @@ export class YNABBudgetEntryBuilder extends YNABEntryBuilder {
                     memo: null,
                 },
                 ...goalCategories.map(category => {
-                        const categoryGroup: CategoryGroupWithCategories = this.getCategoryGroup(category);
+                        const categoryGroup: CategoryGroup = this.getCategoryGroup(category);
                         return {
                             account: `Budget:${this.validateAndNormalizeAccountName(`${categoryGroup.name}:${category.name}`)}`,
                             amount: this.convertAmount(category.budgeted),
@@ -53,7 +53,7 @@ export class YNABBudgetEntryBuilder extends YNABEntryBuilder {
     }
 
     public buildAutomaticEntry(category: Category): AutomaticEntry {
-        const categoryGroup: CategoryGroupWithCategories = this.getCategoryGroup(category);
+        const categoryGroup: CategoryGroup = this.getCategoryGroup(category);
         const accountName: string = `${this.validateAndNormalizeAccountName(`${categoryGroup.name}:${category.name}`)}`;
         const accountMatcher = `/${SplitGroup.Expenses}:${accountName}/`;
         return new AutomaticEntry({

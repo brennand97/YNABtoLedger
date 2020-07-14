@@ -1,4 +1,4 @@
-import { Account, Category, CategoryGroupWithCategories, TransactionDetail, utils } from 'ynab';
+import { Account, Category, CategoryGroup, TransactionDetail, utils } from 'ynab';
 import { DedupLogger } from '../../logging';
 import { SplitGroup } from '../../types';
 import { normalizeAccountName, validateAccountName } from '../../utils';
@@ -7,14 +7,14 @@ export class YNABEntryBuilder {
     protected transactionLookup: (id: string) => TransactionDetail;
     protected accountLookup: (id: string) => Account;
     protected categoryLookup: (id: string) => Category;
-    protected categoryGroupLookup: (id: string) => CategoryGroupWithCategories;
+    protected categoryGroupLookup: (id: string) => CategoryGroup;
     protected dedupLogger: DedupLogger;
 
     constructor(
         transactionsLookup: ((id: string) => TransactionDetail),
         accountLookup: ((id: string) => Account),
         categoryLookup: ((id: string) => Category),
-        categoryGroupLookup: ((id: string) => CategoryGroupWithCategories),
+        categoryGroupLookup: ((id: string) => CategoryGroup),
         loggerKey: string
     ) {
         this.transactionLookup = transactionsLookup;
@@ -24,7 +24,7 @@ export class YNABEntryBuilder {
         this.dedupLogger = new DedupLogger(loggerKey);
     }
 
-    protected getCategoryGroup(category: Category): CategoryGroupWithCategories {
+    protected getCategoryGroup(category: Category): CategoryGroup {
         if (category.hidden) {
             const originalGroup = this.categoryGroupLookup(category.original_category_group_id);
             if (originalGroup) {

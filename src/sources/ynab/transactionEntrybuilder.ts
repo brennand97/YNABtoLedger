@@ -1,4 +1,4 @@
-import { Account, Category, CategoryGroupWithCategories, MonthDetail, SubTransaction, TransactionDetail, utils } from 'ynab';
+import { Account, Category, CategoryGroup, MonthDetail, SubTransaction, TransactionDetail, utils } from 'ynab';
 import { StandardEntry } from '../../entries/StandardEntry';
 import { EntryType, SplitGroup } from '../../types';
 import { hashCode, splitSort } from '../../utils';
@@ -10,7 +10,7 @@ export class YNABTransactionEntryBuilder extends YNABEntryBuilder {
         transactionsLookup: ((id: string) => TransactionDetail),
         accountLookup: ((id: string) => Account),
         categoryLookup: ((id: string) => Category),
-        categoryGroupLookup: ((id: string) => CategoryGroupWithCategories)
+        categoryGroupLookup: ((id: string) => CategoryGroup)
     ) {
         super(
             transactionsLookup,
@@ -76,7 +76,7 @@ export class YNABTransactionEntryBuilder extends YNABEntryBuilder {
     private buildStandardEntry(transaction: TransactionDetail): StandardEntry {
         const account = this.accountLookup(transaction.account_id);
         const category: Category = this.categoryLookup(transaction.category_id);
-        const categoryGroup: CategoryGroupWithCategories = this.getCategoryGroup(category);
+        const categoryGroup: CategoryGroup = this.getCategoryGroup(category);
         return new StandardEntry({
             ...this.buildDefaultEntry(transaction),
             splits: [
@@ -113,7 +113,7 @@ export class YNABTransactionEntryBuilder extends YNABEntryBuilder {
                 },
                 ...transaction.subtransactions.map((subTransaction: SubTransaction) => {
                     const category: Category = this.categoryLookup(subTransaction.category_id);
-                    const categoryGroup: CategoryGroupWithCategories = this.getCategoryGroup(category);
+                    const categoryGroup: CategoryGroup = this.getCategoryGroup(category);
                     return {
                         account: this.getSplitAccountName(
                             transaction,
@@ -135,7 +135,7 @@ export class YNABTransactionEntryBuilder extends YNABEntryBuilder {
 
     private getCategorySplitGroup(transaction: TransactionDetail, category: Category): SplitGroup {
         switch (category.name) {
-            case 'Inflows':
+            case 'To be Budgeted':
                 if (transaction.payee_name === 'Starting Balance') {
                     return SplitGroup.Equity;
                 } else {
@@ -149,7 +149,7 @@ export class YNABTransactionEntryBuilder extends YNABEntryBuilder {
     private getSplitAccountName(
         transaction: TransactionDetail,
         category: Category,
-        categoryGroup: CategoryGroupWithCategories): string {
+        categoryGroup: CategoryGroup): string {
         const accountName = (() => {
             switch (this.getCategorySplitGroup(transaction, category)) {
                 case SplitGroup.Income:
