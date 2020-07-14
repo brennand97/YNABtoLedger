@@ -6,9 +6,9 @@ import {
     Category,
     CategoryGroup,
     MonthDetail,
+    Payee,
     SubTransaction,
     TransactionDetail,
-    Payee,
 } from 'ynab';
 
 import { getConfig } from '../../configuration';
