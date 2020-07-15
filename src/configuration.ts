@@ -90,6 +90,10 @@ export function setInstanceConfig(config: Partial<IConfiguration>): void {
     instanceCfg = config;
 }
 
+export function getInstanceConfig(): Partial<IConfiguration> {
+    return instanceCfg;
+}
+
 export async function getConfig(): Promise<IConfiguration> {
     if (!cfg) {
         await initializeConfiguration();

@@ -49,12 +49,14 @@ export async function getEntries(options: IYNABOptions = defaultOptions): Promis
     );
 
     const entrySets: IEntry[][] = [];
+
     entrySets.push(buildTransactionEntries(
         transactions,
         accounts,
         categories,
         categoryGroups
     ));
+
     if (options.budget) {
         entrySets.push(buildBudgetEntries(
             transactions,

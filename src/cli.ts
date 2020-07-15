@@ -1,79 +1,22 @@
 #!/usr/bin/env node
 
 import meow = require('meow');
+import { ListAccountsSubCommand } from './commands/list-accounts';
+import { ToBeancountSubCommand } from './commands/to-beancount';
+import { ToLedgerSubCommand } from './commands/to-ledger';
 import { getConfig, initializeConfiguration, setInstanceConfig } from './configuration';
+import { EntriesProvider } from './entiresProvider';
 import { DedupLogger } from './logging';
-import * as beancount from './outputs/beancount';
-import * as ledger from './outputs/ledger';
-import * as ynab from './sources/ynab/index';
-import { transform } from './transformation/index';
 import { IConfiguration, IEntry } from './types';
-import { flatMap } from './utils';
 
-async function readCli(): Promise<meow.Result> {
-    const cli: meow.Result = meow(`
-        Usage
-        $ ynab-to-ledger
-
-        Options
-        --acounts                Output only the account list
-        --beancount              Output in beancount style
-        --beancount-tags         For beancount: add a entry id as tag
-        --budget (-b)            Include the budget entries for ledger
-        --config (-c)            Config file to be used
-        --filter (-f) <regex>    Filter by accounts
-        --override (-o)          Override configuration file by flags
-        --start-date (-s)        Date to start transactions from
-
-        Examples
-        $ ynab-to-ledger --filter '^Expenses.*'
-        $ ynab-to-ledger --config config/.ynabtoledgerrc
-    `, {
-        flags: {
-            accounts: {
-                default: false,
-                type: 'boolean',
-            },
-            beancount: {
-                default: false,
-                type: 'boolean',
-            },
-            beancountTags: {
-                default: false,
-                type: 'boolean',
-            },
-            budget: {
-                alias: 'b',
-                default: false,
-                type: 'boolean',
-            },
-            config: {
-                alias: 'c',
-                type: 'string',
-            },
-            filter: {
-                alias: 'f',
-                type: 'string',
-            },
-            override: {
-                alias: 'o',
-                default: false,
-                tyep: 'boolean',
-            },
-            startDate: {
-                alias: 's',
-                type: 'string',
-            },
-        },
-    });
-
+async function configureCommonConfig(cli: meow.Result): Promise<void> {
     await initializeConfiguration(cli.flags.config);
     const config: IConfiguration = await getConfig();
 
     let instanceConfig: Partial<IConfiguration> = {};
 
     if (cli.flags.filter) {
-        if (cli.flags.override) {
+        if (cli.flags.override || !config.account_filter) {
             instanceConfig = {
                 ...instanceConfig,
                 account_filter: [
@@ -98,42 +41,68 @@ async function readCli(): Promise<meow.Result> {
         };
     }
 
-    if (cli.flags.override && cli.flags.beancountTags) {
-        instanceConfig = {
-            ...instanceConfig,
-            beancount_tags: cli.flags.beancountTags,
-        };
-    }
-
     setInstanceConfig(instanceConfig);
-
-    return cli;
 }
 
 (async () => {
-    const logger: DedupLogger = new DedupLogger('CLI');
-    const cli: meow.Result = await readCli();
+    const logger: DedupLogger = new DedupLogger('CliManager');
 
-    const ynabEntries: IEntry[] = await ynab.getEntries({
-        budget: cli.flags.budget,
+    const cliFlags: { [name: string]: any } = {
+        config: {
+            alias: 'c',
+            type: 'string',
+        },
+        filter: {
+            alias: 'f',
+            type: 'string',
+        },
+        override: {
+            alias: 'o',
+            default: false,
+            tyep: 'boolean',
+        },
+        startDate: {
+            alias: 's',
+            type: 'string',
+        },
+    };
+    const cli: meow.Result = meow(`
+        Usage
+          $ ynab-translator [options] <command>
+
+        Options
+          --config (-c)            config file to be used
+          --filter (-f) <regex>    regex filter on accounts of transactions
+          --override (-o)          override configuration file by flags
+          --start-date (-s)        date to start YNAB transactions from
+
+        Commands
+          list-accounts            lists the mapped accounts from YNAB
+          to-beancount             handles the translation from YNAB to beancount files
+          to-ledger                handles the translation from YNAB to a ledger file
+
+        Examples
+          $ ynab-translator --filter '^Expenses.*' list-account
+          $ ynab-translator --config config/.ynabtoledgerrc to-beancount
+    `, {
+        autoHelp: false,
+        flags: cliFlags,
     });
 
-    const transformedEntries: IEntry[] = await transform(ynabEntries);
+    const subCommandMap: {[key: string]: (provider: EntriesProvider) => ISubCommand} = {
+        'list-accounts': p => new ListAccountsSubCommand(p),
+        'to-beancount':  p => new ToBeancountSubCommand(p, cliFlags),
+        'to-ledger':     p => new ToLedgerSubCommand(p),
+    };
 
-    if (cli.flags.accounts) {
-        const accounts: string[] = Array.from(flatMap(transformedEntries
-            .map(entry => entry.splits
-                .map(split => `${split.group}:${split.account}`)))
-            .reduce((set: Set<string>, accountName: string) => set.add(accountName), new Set()))
-            .sort();
-
-        console.log(accounts.join('\n'));
-    } else {
-        const output: string = cli.flags.beancount
-        ? await beancount.compile(transformedEntries)
-        : await ledger.compile(transformedEntries);
-
-        console.log(output);
+    if (cli.input.length === 0 || !(cli.input[0] in subCommandMap)) {
+        cli.showHelp();
     }
 
+    await configureCommonConfig(cli);
+
+    const provider: EntriesProvider = new EntriesProvider();
+    const command: ISubCommand = subCommandMap[cli.input[0]](provider);
+
+    await command.execute();
 })();

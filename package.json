@@ -1,8 +1,8 @@
 {
-  "name": "ynabtoledger",
-  "version": "1.0.0",
-  "description": "Syncs from YNAB to a ledger filesystem",
-  "main": "index.js",
+  "name": "ynab-translator",
+  "version": "1.1.0",
+  "description": "Pulls data from YNAB and converts it to other formats",
+  "main": "cli.js",
   "dependencies": {
     "@types/cosmiconfig": "^5.0.3",
     "@types/meow": "^5.0.0",
@@ -25,7 +25,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "bin": {
-    "ynab-to-ledger": "./dist/cli.js"
+    "ynab-translator": "./dist/cli.js"
   },
   "author": "Brennan Douglas",
   "license": "ISC"
