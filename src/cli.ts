@@ -75,7 +75,7 @@ async function configureCommonConfig(cli: meow.Result<CommonFlags>): Promise<voi
 
         Examples
           $ ynab-translator --filter '^Expenses.*' list-account
-          $ ynab-translator --config config/.ynabtoledgerrc to-beancount
+          $ ynab-translator --config config/.ynabtransformerrc to-beancount
     `, {
         autoHelp: false,
         flags: cliFlags,

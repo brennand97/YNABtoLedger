@@ -8,7 +8,7 @@ import ynabBuildConfig from './sources/ynab/config';
 import { IConfiguration, IYNABConfiguration } from './types';
 import moment from 'moment';
 
-const moduleName = 'ynabtoledger';
+const moduleName = 'ynabtransformer';
 const home = process.env.HOME;
 const defaultConfigPath = path.join(home || '.', `.${moduleName}rc`);
 let cfg: IConfiguration;
