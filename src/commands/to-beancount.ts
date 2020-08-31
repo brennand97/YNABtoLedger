@@ -3,22 +3,23 @@ import { getConfig, getInstanceConfig, setInstanceConfig } from '../configuratio
 import { EntriesProvider } from '../entiresProvider';
 import { DedupLogger } from '../logging';
 import * as beancount from '../outputs/beancount';
-import { IConfiguration, IEntry } from '../types';
+import { IConfiguration, IEntry, CommonFlags } from '../types';
+import { ISubCommand, ToBeancountFlags } from './types';
 
 export class ToBeancountSubCommand implements ISubCommand {
 
     private logger: DedupLogger;
     private provider: EntriesProvider;
-    private parentFlags: { [name: string]: any };
+    private parentFlags: CommonFlags;
 
-    constructor(provider: EntriesProvider, parentFlags: { [name: string]: any }) {
+    constructor(provider: EntriesProvider, parentFlags: CommonFlags) {
         this.logger = new DedupLogger('ToBeancountSubCommand');
         this.provider = provider;
         this.parentFlags = parentFlags;
     }
 
     public async execute(): Promise<void> {
-        const cli: meow.Result = await this.getCli();
+        const cli: meow.Result<ToBeancountFlags> = await this.getCli();
         const config: IConfiguration = await getConfig();
 
         let instanceConfig: Partial<IConfiguration> = getInstanceConfig();
@@ -35,8 +36,8 @@ export class ToBeancountSubCommand implements ISubCommand {
         console.log(await beancount.compile(entries));
     }
 
-    private async getCli(): Promise<meow.Result> {
-        const cli: meow.Result = meow(`
+    private async getCli(): Promise<meow.Result<ToBeancountFlags>> {
+        const cli: meow.Result<ToBeancountFlags> = meow(`
             Subcommand: to-beancount
 
               Pulls transactions from YNAB and outputs them in the

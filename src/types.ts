@@ -1,4 +1,11 @@
 import { IOutputEntry, OutputType } from './outputs/types';
+import meow, { AnyFlags, StringFlag, BooleanFlag } from 'meow';
+
+export interface CommonFlags extends AnyFlags {
+    config: StringFlag & {type: 'string'};
+    filter: StringFlag & {type: 'string'};
+    startDate: StringFlag & {type: 'string'};
+}
 
 export interface IConfiguration {
     ynab: IYNABConfiguration;

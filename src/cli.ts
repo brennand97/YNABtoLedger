@@ -7,15 +7,16 @@ import { ToLedgerSubCommand } from './commands/to-ledger';
 import { getConfig, initializeConfiguration, setInstanceConfig } from './configuration';
 import { EntriesProvider } from './entiresProvider';
 import { DedupLogger } from './logging';
-import { IConfiguration, IEntry } from './types';
+import { IConfiguration, IEntry, CommonFlags } from './types';
+import { ISubCommand } from './commands/types';
 
-async function configureCommonConfig(cli: meow.Result): Promise<void> {
+async function configureCommonConfig(cli: meow.Result<CommonFlags>): Promise<void> {
     await initializeConfiguration(cli.flags.config);
     const config: IConfiguration = await getConfig();
 
     let instanceConfig: Partial<IConfiguration> = {};
 
-    if (cli.flags.filter && cli.flags.filter.length > 0) {
+    if (cli.flags.filter) {
         try {
             cli.flags.filter = JSON.parse(cli.flags.filter)
         } catch (e) {
@@ -43,7 +44,7 @@ async function configureCommonConfig(cli: meow.Result): Promise<void> {
 (async () => {
     const logger: DedupLogger = new DedupLogger('CliManager');
 
-    const cliFlags: { [name: string]: any } = {
+    const cliFlags: CommonFlags = {
         config: {
             alias: 'c',
             type: 'string',
@@ -57,7 +58,8 @@ async function configureCommonConfig(cli: meow.Result): Promise<void> {
             type: 'string',
         },
     };
-    const cli: meow.Result = meow(`
+    cliFlags.config.type;
+    const cli: meow.Result<CommonFlags> = meow(`
         Usage
           $ ynab-translator [options] <command>
 
@@ -82,7 +84,7 @@ async function configureCommonConfig(cli: meow.Result): Promise<void> {
     const subCommandMap: {[key: string]: (provider: EntriesProvider) => ISubCommand} = {
         'list-accounts': p => new ListAccountsSubCommand(p),
         'to-beancount':  p => new ToBeancountSubCommand(p, cliFlags),
-        'to-ledger':     p => new ToLedgerSubCommand(p),
+        'to-ledger':     p => new ToLedgerSubCommand(p, cliFlags),
     };
 
     if (cli.input.length === 0 || !(cli.input[0] in subCommandMap)) {

@@ -1,8 +1,9 @@
 import meow from 'meow';
 import { EntriesProvider } from '../entiresProvider';
 import { DedupLogger } from '../logging';
-import { IEntry } from '../types';
+import { IEntry, CommonFlags } from '../types';
 import { flatMap } from '../utils';
+import { ISubCommand } from './types';
 
 export class ListAccountsSubCommand implements ISubCommand {
 
@@ -15,7 +16,7 @@ export class ListAccountsSubCommand implements ISubCommand {
     }
 
     public async execute(): Promise<void> {
-        const cli: meow.Result = await this.getCli();
+        const cli: meow.Result<CommonFlags> = await this.getCli();
 
         const entries: IEntry[] = await this.provider.getBankEntries();
 
@@ -28,8 +29,8 @@ export class ListAccountsSubCommand implements ISubCommand {
         console.log(accounts.join('\n'));
     }
 
-    private async getCli(): Promise<meow.Result> {
-        const cli: meow.Result = meow(`
+    private async getCli(): Promise<meow.Result<CommonFlags>> {
+        const cli: meow.Result<CommonFlags> = meow(`
             Subcommand: list-accounts
 
               Lists the mapped accounts found in the transactions from YNAB.
