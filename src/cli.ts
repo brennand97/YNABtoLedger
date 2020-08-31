@@ -65,7 +65,7 @@ async function configureCommonConfig(cli: meow.Result<CommonFlags>): Promise<voi
 
         Options
           --config (-c)                                  config file to be used
-          --filter (-f) [<filte name> | <json-logic>]    either named filter, or json-logic syntax (http://jsonlogic.com)
+          --filter (-f) [<file name> | <json-logic>]     either named filter, or json-logic syntax (http://jsonlogic.com)
           --start-date (-s)                              date to start YNAB transactions from
 
         Commands
