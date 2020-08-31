@@ -22,7 +22,7 @@ export class ToBeancountSubCommand implements ISubCommand {
         const config: IConfiguration = await getConfig();
 
         let instanceConfig: Partial<IConfiguration> = getInstanceConfig();
-        if (cli.flags.tags && (cli.flags.override || !config.beancount_tags)) {
+        if (cli.flags.tags) {
             instanceConfig = {
                 ...instanceConfig,
                 beancount_tags: cli.flags.tags,

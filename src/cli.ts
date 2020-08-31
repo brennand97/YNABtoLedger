@@ -15,23 +15,19 @@ async function configureCommonConfig(cli: meow.Result): Promise<void> {
 
     let instanceConfig: Partial<IConfiguration> = {};
 
-    if (cli.flags.filter) {
-        if (cli.flags.override || !config.account_filter) {
-            instanceConfig = {
-                ...instanceConfig,
-                account_filter: [
-                    cli.flags.filter,
-                ],
-            };
-        } else {
-            instanceConfig = {
-                ...instanceConfig,
-                account_filter: [
-                    ...config.account_filter,
-                    cli.flags.filter,
-                ],
-            };
+    if (cli.flags.filter && cli.flags.filter.length > 0) {
+        try {
+            cli.flags.filter = JSON.parse(cli.flags.filter)
+        } catch (e) {
+            if (e instanceof SyntaxError && cli.flags.filter.match(/[{}]/)) {
+                throw e;
+            }
         }
+
+        instanceConfig = {
+            ...instanceConfig,
+            active_filter: cli.flags.filter,
+        };
     }
 
     if (cli.flags.startDate) {
@@ -56,11 +52,6 @@ async function configureCommonConfig(cli: meow.Result): Promise<void> {
             alias: 'f',
             type: 'string',
         },
-        override: {
-            alias: 'o',
-            default: false,
-            tyep: 'boolean',
-        },
         startDate: {
             alias: 's',
             type: 'string',
@@ -71,15 +62,14 @@ async function configureCommonConfig(cli: meow.Result): Promise<void> {
           $ ynab-translator [options] <command>
 
         Options
-          --config (-c)            config file to be used
-          --filter (-f) <regex>    regex filter on accounts of transactions
-          --override (-o)          override configuration file by flags
-          --start-date (-s)        date to start YNAB transactions from
+          --config (-c)                                  config file to be used
+          --filter (-f) [<filte name> | <json-logic>]    either named filter, or json-logic syntax (http://jsonlogic.com)
+          --start-date (-s)                              date to start YNAB transactions from
 
         Commands
-          list-accounts            lists the mapped accounts from YNAB
-          to-beancount             handles the translation from YNAB to beancount files
-          to-ledger                handles the translation from YNAB to a ledger file
+          list-accounts                                  lists the mapped accounts from YNAB
+          to-beancount                                   handles the translation from YNAB to beancount files
+          to-ledger                                      handles the translation from YNAB to a ledger file
 
         Examples
           $ ynab-translator --filter '^Expenses.*' list-account

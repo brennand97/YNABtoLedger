@@ -2,8 +2,9 @@ import { IOutputEntry, OutputType } from './outputs/types';
 
 export interface IConfiguration {
     ynab: IYNABConfiguration;
-    account_name_map: Array<{ search: string, replace: string }>;
-    account_filter: string[];
+    account_name_map: SearchReplaceArray | SearchReplaceMap;
+    active_filter?: string | IFilter;
+    filters: {[name: string]: IFilter};
     start_date?: string;
     beancount_tags: boolean;
 }
@@ -12,6 +13,14 @@ export interface IYNABConfiguration {
     api_access_token: string;
     primary_budget_id: string;
 }
+
+export type IFilter = {
+    [operator: string]: IFilterSubOperations | IFilterSubOperations[]
+};
+export type IFilterSubOperations = string | number | IFilter;
+
+export type SearchReplaceArray = Array<{ search: string, replace: string }>;
+export type SearchReplaceMap = {[search: string]: string};
 
 export enum SplitGroup {
     Assets = 'Assets',

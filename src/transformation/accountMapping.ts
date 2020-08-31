@@ -1,6 +1,7 @@
 import { DedupLogger } from '../logging';
-import { IConfiguration, IEntry, SplitGroup } from '../types';
+import { IConfiguration, IEntry, SplitGroup, SearchReplaceArray } from '../types';
 import { flatMap, identity } from '../utils';
+import { stringify } from 'querystring';
 
 export function mapAccounts(config: IConfiguration, entries: IEntry[]) {
     const logger: DedupLogger = new DedupLogger('Account Mapping');
@@ -11,7 +12,18 @@ export function mapAccounts(config: IConfiguration, entries: IEntry[]) {
         .reduce((set: Set<string>, accountName: string) => set.add(accountName), new Set()));
 
     if (config.account_name_map) {
-        const regexList: RegExp[] = config.account_name_map.map(elm => new RegExp(elm.search));
+
+        let search_replace_array: SearchReplaceArray;
+        if (!Array.isArray(config.account_name_map)) {
+            search_replace_array = Object.entries(config.account_name_map)
+                                         .map(([search, replace]: [string, string]) => {
+                                             return { search, replace };
+                                         }) as SearchReplaceArray;
+        } else {
+            search_replace_array = config.account_name_map as SearchReplaceArray;
+        }
+
+        const regexList: RegExp[] = search_replace_array.map(elm => new RegExp(elm.search));
 
         const accountNameMap: { [key: string]: string } =
             accountNames.reduce((map: { [key: string]: string }, accountName: string) => {
@@ -19,7 +31,7 @@ export function mapAccounts(config: IConfiguration, entries: IEntry[]) {
                 const index: number = matchList.findIndex(identity);
                 map[accountName] = index < 0
                     ? accountName
-                    : accountName.replace(regexList[index], config.account_name_map[index].replace);
+                    : accountName.replace(regexList[index], search_replace_array[index].replace);
                 return map;
             }, {});
 

@@ -1,6 +1,6 @@
 {
   "name": "ynab-translator",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Pulls data from YNAB and converts it to other formats",
   "main": "cli.js",
   "dependencies": {
@@ -10,6 +10,7 @@
     "@types/prompts": "^2.0.1",
     "cosmiconfig": "^5.2.1",
     "dotenv": "^8.1.0",
+    "json-logic-js": "^1.2.2",
     "meow": "^5.0.0",
     "moment": "^2.24.0",
     "prompts": "^2.2.1",
