@@ -2,13 +2,14 @@ import { IOutputRow, OutputRowType, OutputType } from '../outputs/types';
 import { EntryType, IEntry } from '../types';
 import { splitSort } from '../utils';
 
-export function buildLedgerEntryRows({type, splits, currencySymbol}: IEntry, outputType: OutputType): IOutputRow[] {
+export function buildLedgerEntryRows({type, splits, currency}: IEntry, outputType: OutputType): IOutputRow[] {
     splits = splits.sort(splitSort);
     switch (outputType) {
         case OutputType.Ledger:
             return splits.map(split => {
                 const amount = Math.abs(split.amount);
                 const sign = Math.sign(split.amount);
+                const currencySymbol = currencyToSymbol(currency);
                 const amountString = `${sign > 0 ? ' ' : '-'}${currencySymbol}${amount.toFixed(2)}`;
                 switch (type) {
                     case EntryType.Transaction:
@@ -43,8 +44,7 @@ export function buildLedgerEntryRows({type, splits, currencySymbol}: IEntry, out
             return splits.map(split => {
                 const amount = Math.abs(split.amount);
                 const sign = Math.sign(split.amount);
-                const currencyAbbreviation = currencySymbolToAbbreviation(currencySymbol);
-                const amountString = `${sign > 0 ? ' ' : '-'}${amount.toFixed(2)} ${currencyAbbreviation}`;
+                const amountString = `${sign > 0 ? ' ' : '-'}${amount.toFixed(2)} ${currency}`;
                 switch (type) {
                     case EntryType.Transaction:
                         return {
@@ -68,10 +68,10 @@ export function buildLedgerEntryRows({type, splits, currencySymbol}: IEntry, out
     }
 }
 
-export function currencySymbolToAbbreviation(currencySymbol: string): string {
+export function currencyToSymbol(currency: string): string {
     // tslint:disable: object-literal-key-quotes
     return {
-        '$': 'USD',
-    }[currencySymbol];
+        'USD': '$',
+    }[currency];
     // tslint:enable: object-literal-key-quotes
 }

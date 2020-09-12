@@ -1,9 +1,10 @@
 import moment = require('moment');
+import { uuidv5 } from 'uuid';
 import { Account, Category, CategoryGroup, MonthDetail, TransactionDetail } from 'ynab';
 import { AutomaticEntry } from '../../entries/AutomaticEntry';
 import { StandardEntry } from '../../entries/StandardEntry';
 import { EntryType, SplitGroup } from '../../types';
-import { hashCode, splitSort } from '../../utils';
+import { splitSort, UUID_NAMESPACE } from '../../utils';
 import { YNABEntryBuilder } from './entryBuilder';
 
 export class YNABBudgetEntryBuilder extends YNABEntryBuilder {
@@ -58,7 +59,7 @@ export class YNABBudgetEntryBuilder extends YNABEntryBuilder {
         const accountMatcher = `/${SplitGroup.Expenses}:${accountName}/`;
         return new AutomaticEntry({
             accountMatcher,
-            id: hashCode(accountMatcher),
+            id: uuidv5(accountMatcher, UUID_NAMESPACE),
             recordDate: moment(0).format('YYYY-MM-DD'),
             splits: [
                 {
@@ -81,8 +82,8 @@ export class YNABBudgetEntryBuilder extends YNABEntryBuilder {
     private buildDefaultEntry(month: MonthDetail): Partial<StandardEntry> {
         return {
             cleared: true,
-            currencySymbol: '$',
-            id: hashCode(month.month),
+            currency: 'USD',
+            id: uuidv5(month.month, UUID_NAMESPACE),
             memo: month.note ? month.note : null,
             metadata: {},
             payee: 'Budget',

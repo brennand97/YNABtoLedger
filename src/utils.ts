@@ -1,5 +1,7 @@
 import { IEntry, ISplit } from './types';
 
+export const UUID_NAMESPACE: string = '52670371-647b-4ffc-a0fa-f9faefc4b121';
+
 export function arraysEqual<T>(a: T[], b: T[]) {
     if (a === b) {
         return true;
@@ -103,19 +105,6 @@ export function flatMap<T>(list: T[][]): T[] {
 
 export function identity<T>(arg: T): T {
     return arg;
-}
-
-export function hashCode(s) {
-    let h = 0;
-    let i = 0;
-    const l = s.length;
-    if ( l > 0 ) {
-      while (i < l) {
-        // tslint:disable-next-line:no-bitwise
-        h = (h << 5) - h + s.charCodeAt(i++) | 0;
-      }
-    }
-    return h;
 }
 
 // ---------------------- Normalization and validation functions ----------------------

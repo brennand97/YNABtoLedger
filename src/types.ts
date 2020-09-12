@@ -51,10 +51,10 @@ export enum EntryType {
 
 export interface IEntry {
     type: EntryType;
-    id: number;
+    id: string;
     recordDate: string;
     memo: string;
-    currencySymbol: string;
+    currency: string;
     splits: ISplit[];
     metadata: {[key: string]: string};
 

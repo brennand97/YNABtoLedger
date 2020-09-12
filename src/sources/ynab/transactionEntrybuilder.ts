@@ -1,7 +1,8 @@
+import { v5 as uuidv5 } from 'uuid';
 import { Account, Category, CategoryGroup, MonthDetail, SubTransaction, TransactionDetail, utils } from 'ynab';
 import { StandardEntry } from '../../entries/StandardEntry';
 import { EntryType, SplitGroup } from '../../types';
-import { hashCode, splitSort } from '../../utils';
+import { splitSort, UUID_NAMESPACE } from '../../utils';
 import { YNABEntryBuilder } from './entryBuilder';
 
 export class YNABTransactionEntryBuilder extends YNABEntryBuilder {
@@ -37,8 +38,8 @@ export class YNABTransactionEntryBuilder extends YNABEntryBuilder {
     private buildDefaultEntry(transaction: TransactionDetail): Partial<StandardEntry> {
         return {
             cleared: this.isCleared(transaction.cleared),
-            currencySymbol: '$',
-            id: hashCode(transaction.id),
+            currency: 'USD',
+            id: uuidv5(transaction.id, UUID_NAMESPACE),
             memo: transaction.memo,
             metadata: {ynab_id: transaction.id},
             payee: transaction.payee_name,
@@ -54,7 +55,11 @@ export class YNABTransactionEntryBuilder extends YNABEntryBuilder {
         const transferAccount = this.accountLookup(transaction.transfer_account_id);
         return new StandardEntry({
             ...this.buildDefaultEntry(transaction),
-            id: hashCode([transaction.id, transferTransaction.id].sort().join('')),
+            id: uuidv5([transaction.id, transferTransaction.id].sort().join(''), UUID_NAMESPACE),
+            metadata: {
+                ynab_id: transaction.id,
+                ynab_transfer_id: transferTransaction.id,
+            },
             payee: 'Transfer',
             splits: [
                 {

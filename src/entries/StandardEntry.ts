@@ -4,10 +4,10 @@ import { buildLedgerEntryRows } from './common';
 
 export class StandardEntry implements IEntry {
     public type: EntryType;
-    public id: number;
+    public id: string;
     public recordDate: string;
     public memo: string;
-    public currencySymbol: string;
+    public currency: string;
     public splits: ISplit[];
     public metadata: {[key: string]: string};
 

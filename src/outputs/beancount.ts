@@ -80,7 +80,7 @@ function ledgerRowToString(
             const accountSpacing = ' '.repeat(maxAccountWidth - accountName.length + columnSpacing + amountOffset);
             const amountSpacing = ' '.repeat(maxAmountWidth - amountOffset - formatedAmount.length + columnSpacing);
 
-            return `${accountName}${accountSpacing}${formatedAmount}${amountSpacing}${memo}`;
+            return `${accountName}${accountSpacing}${formatedAmount}${amountSpacing}${memo}`.trimEnd();
     }
     return '';
 }
