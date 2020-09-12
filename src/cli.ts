@@ -3,12 +3,13 @@
 import meow = require('meow');
 import { ListAccountsSubCommand } from './commands/list-accounts';
 import { ToBeancountSubCommand } from './commands/to-beancount';
+import { ToJsonSubCommand } from './commands/to-json';
 import { ToLedgerSubCommand } from './commands/to-ledger';
+import { ISubCommand } from './commands/types';
 import { getConfig, initializeConfiguration, setInstanceConfig } from './configuration';
 import { EntriesProvider } from './entiresProvider';
 import { DedupLogger } from './logging';
-import { IConfiguration, IEntry, CommonFlags } from './types';
-import { ISubCommand } from './commands/types';
+import { CommonFlags, IConfiguration, IEntry } from './types';
 
 async function configureCommonConfig(cli: meow.Result<CommonFlags>): Promise<void> {
     await initializeConfiguration(cli.flags.config);
@@ -18,7 +19,7 @@ async function configureCommonConfig(cli: meow.Result<CommonFlags>): Promise<voi
 
     if (cli.flags.filter) {
         try {
-            cli.flags.filter = JSON.parse(cli.flags.filter)
+            cli.flags.filter = JSON.parse(cli.flags.filter);
         } catch (e) {
             if (e instanceof SyntaxError && cli.flags.filter.match(/[{}]/)) {
                 throw e;
@@ -58,7 +59,7 @@ async function configureCommonConfig(cli: meow.Result<CommonFlags>): Promise<voi
             type: 'string',
         },
     };
-    cliFlags.config.type;
+
     const cli: meow.Result<CommonFlags> = meow(`
         Usage
           $ ynab-translator [options] <command>
@@ -72,6 +73,7 @@ async function configureCommonConfig(cli: meow.Result<CommonFlags>): Promise<voi
           list-accounts                                  lists the mapped accounts from YNAB
           to-beancount                                   handles the translation from YNAB to beancount files
           to-ledger                                      handles the translation from YNAB to a ledger file
+          to-json                                        handles the translation from YNAB to the internal json representation
 
         Examples
           $ ynab-translator --filter '^Expenses.*' list-account
@@ -84,6 +86,7 @@ async function configureCommonConfig(cli: meow.Result<CommonFlags>): Promise<voi
     const subCommandMap: {[key: string]: (provider: EntriesProvider) => ISubCommand} = {
         'list-accounts': p => new ListAccountsSubCommand(p),
         'to-beancount':  p => new ToBeancountSubCommand(p, cliFlags),
+        'to-json':       p => new ToJsonSubCommand(p),
         'to-ledger':     p => new ToLedgerSubCommand(p, cliFlags),
     };
 

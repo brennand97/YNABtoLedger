@@ -1,12 +1,12 @@
+import * as jsonLogic from 'json-logic-js';
 import { Moment } from 'moment';
 import moment = require('moment');
-import * as jsonLogic from 'json-logic-js';
 
-import { IConfiguration, IEntry, IFilter } from '../types';
+import { IConfiguration, IEntry, IFilter, IFilterSubOperations } from '../types';
 
 export function createJsonLogic(config: IConfiguration): any {
     Object.entries(config.filters).forEach(([name, filter]: [string, IFilter]) => {
-        jsonLogic.add_operation(`filter_${name}`, (entry: IEntry) => jsonLogic.apply(filter, {'entry': entry}));
+        jsonLogic.add_operation(`filter_${name}`, (entry: IEntry) => jsonLogic.apply(filter, {entry}));
     });
 
     jsonLogic.add_operation('regex', (pattern: string, flags: string) => new RegExp(pattern, flags));
@@ -22,12 +22,41 @@ export function createJsonLogic(config: IConfiguration): any {
     jsonLogic.add_operation('has_account', (entry: IEntry, pattern: string | RegExp) => {
         return entry.splits
             .map(split => `${split.group}:${split.account}`)
-            .some(split_name => typeof pattern === 'string'
-                    ? split_name === pattern
-                    : split_name.match(pattern));
-    })
+            .some(splitName => typeof pattern === 'string'
+                    ? splitName === pattern
+                    : splitName.match(pattern));
+    });
 
     return jsonLogic;
+}
+
+export function removeOperator(filter: IFilter, blacklistedOperator: string): IFilter {
+    return Object.fromEntries(Object.entries(filter)
+        .filter(([operator, _]: [string, IFilterSubOperations | IFilterSubOperations[]]) => {
+            return operator !== blacklistedOperator;
+        })
+        .map(([operator, subOperation]: [string, IFilterSubOperations | IFilterSubOperations[]]) => {
+            const handleSubOperation = (subOp: IFilterSubOperations) => {
+                if (typeof subOp === 'object' && subOp !== null) {
+                    const cleanedOp = removeOperator(subOp, blacklistedOperator);
+                    return Object.keys(cleanedOp).length === 0 && cleanedOp.constructor === Object
+                        ? null
+                        : cleanedOp;
+                } else {
+                    return subOp as string | number;
+                }
+            };
+            if (Array.isArray(subOperation)) {
+                return [
+                    operator,
+                    subOperation
+                        .map(handleSubOperation)
+                        .filter((subOp: IFilterSubOperations) => subOp !== null)
+                ];
+            } else {
+                return [operator, handleSubOperation(subOperation)];
+            }
+        }));
 }
 
 export function filterEntries(config: IConfiguration, entries: IEntry[]): IEntry[] {
@@ -40,9 +69,12 @@ export function filterEntries(config: IConfiguration, entries: IEntry[]): IEntry
             filter = config.active_filter;
         }
 
-        const jsonLogic = createJsonLogic(config);
+        // Remove 'method' operation due to security risk: https://www.npmjs.com/advisories/1542
+        filter = removeOperator(filter, 'method');
 
-        entries = entries.filter(entry => jsonLogic.apply(filter, {'entry': entry}));
+        const logicHandler = createJsonLogic(config);
+
+        entries = entries.filter(entry => logicHandler.apply(filter, {entry}));
     }
 
     if (config.start_date) {
