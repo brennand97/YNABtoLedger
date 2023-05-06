@@ -15,7 +15,7 @@
     "moment": "^2.27.0",
     "prompts": "^2.3.2",
     "uuid": "^8.3.0",
-    "ynab": "^1.20.0"
+    "ynab": "^1.49.0"
   },
   "devDependencies": {
     "tslint": "^5.20.1",
